@@ -54,6 +54,15 @@ from .gemini import GEMINI_MODEL_ID
 from .mockdrop import MOCKDROP_BASE_URL, MockDropClient
 from .pubsub import PubSubMessageError, decode_push_message, verify_push_token
 from .store import STORE_BACKEND, CaseStore, build_store
+from .vault import (
+    EVIDENCE_BACKEND,
+    EVIDENCE_BUCKET,
+    EVIDENCE_CASE_ID,
+    EVIDENCE_SECRET,
+    EvidenceIntegrityError,
+    EvidenceVault,
+    build_vault,
+)
 
 LOGGER = logging.getLogger("appealos")
 
@@ -114,10 +123,12 @@ class DemoService:
         adk: Optional[ADKEngine] = None,
         mockdrop: Optional[MockDropClient] = None,
         store: Optional[CaseStore] = None,
+        vault: Optional[EvidenceVault] = None,
     ) -> None:
         self.adk = adk or ADKEngine()
         self.mockdrop = mockdrop or MockDropClient()
         self.store = store or build_store()
+        self.vault = vault or build_vault()
         self._workflow_lock = threading.RLock()
 
     # ------------------------------------------------------------------
@@ -266,6 +277,64 @@ class DemoService:
             raise HTTPException(status_code=404, detail=f"Case {case_id} was not found")
         return case
 
+    def vault_manifest(self) -> Dict[str, Any]:
+        """Return non-secret Evidence Vault metadata for the UI and health."""
+        try:
+            artifacts = self.vault.list_artifacts()
+            status = "ok"
+        except Exception as exc:  # surfaced as evidence, never the key
+            LOGGER.warning("evidence_vault_manifest_failed", extra={"error": str(exc)})
+            artifacts = []
+            status = "unavailable"
+        return {
+            "backend": EVIDENCE_BACKEND,
+            "bucket": EVIDENCE_BUCKET if EVIDENCE_BACKEND == "gcs" else None,
+            "demoKeySecret": EVIDENCE_SECRET,
+            "caseId": EVIDENCE_CASE_ID,
+            "synthetic": True,
+            "serverDecryptable": True,
+            "status": status,
+            "artifacts": artifacts,
+        }
+
+    def quarantine_artifact(self, case: DemoCase, artifact_id: str, reason: str) -> None:
+        """Mark an artifact unsafe and block all future citation/disclosure."""
+        if artifact_id not in case.quarantinedArtifactIds:
+            case.quarantinedArtifactIds.append(artifact_id)
+            case.record(
+                "EVIDENCE_QUARANTINED",
+                "SYSTEM",
+                {"artifactId": artifact_id, "reason": reason},
+                case.state,
+            )
+            self._save(case)
+
+    def verify_vault_artifact(
+        self,
+        case: DemoCase,
+        artifact_id: str,
+        purpose: str,
+    ) -> Dict[str, Any]:
+        """Verify one artifact before citation or disclosure.
+
+        The permission check must already be done by the caller.  A hash/AAD
+        mismatch quarantines the artifact and raises 409.
+        """
+        if artifact_id in case.quarantinedArtifactIds:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Evidence artifact {artifact_id} is quarantined and cannot be used for {purpose}",
+            )
+        try:
+            artifact = self.vault.read_verified(artifact_id)
+        except EvidenceIntegrityError as exc:
+            self.quarantine_artifact(case, artifact_id, str(exc))
+            raise HTTPException(
+                status_code=409,
+                detail=f"Evidence integrity failure for {artifact_id}: {exc}",
+            ) from exc
+        return artifact
+
     @serialized_workflow
     def reset(self) -> Dict[str, Any]:
         account = self.mockdrop.reset()["account"]
@@ -322,6 +391,8 @@ class DemoService:
             raise HTTPException(status_code=409, detail="Analysis consent is required before mandate")
         if not case.consent.is_active():
             raise HTTPException(status_code=409, detail="Analysis consent has expired")
+        for artifact_id in case.consent.artifactIds:
+            self.verify_vault_artifact(case, artifact_id, "citation")
         notice_text = case.deadlineSourceText or SYNTHETIC_NOTICE
         relevance = self.assess_relevance(notice_text, case.consent.artifactIds)
         validated_relevance = self.validate_relevance(relevance, case.consent.artifactIds)
@@ -421,9 +492,20 @@ class DemoService:
             )
         if case.appealId is None:
             raise HTTPException(status_code=409, detail="Appeal has not been submitted")
+        verified_device_log = self.verify_vault_artifact(case, "device-log", "disclosure")
+        if verified_device_log["plaintextSha256"] != DEVICE_LOG_SHA256:
+            self.quarantine_artifact(
+                case,
+                "device-log",
+                "Plaintext hash differs from the disclosed MockDrop artifact hash",
+            )
+            raise HTTPException(
+                status_code=409,
+                detail="Device-log plaintext hash does not match the authorized disclosure hash",
+            )
         response = self.mockdrop.submit_supplement(
             appeal_id=case.appealId,
-            artifact_sha256=DEVICE_LOG_SHA256,
+            artifact_sha256=verified_device_log["plaintextSha256"],
             template=SUPPLEMENT_TEMPLATE,
             disclosed_fields=REQUIRED_DEVICE_LOG_FIELDS,
             idempotency_key=f"appealos:{case.caseId}:supplement",
@@ -610,6 +692,7 @@ def health() -> Dict[str, Any]:
         "geminiModel": GEMINI_MODEL_ID,
         "googleAdkVersion": adk_version,
         "storeBackend": STORE_BACKEND,
+        "evidenceVaultBackend": EVIDENCE_BACKEND,
         "pubsubOidcVerification": os.getenv("PUBSUB_VERIFY_OIDC", "false").lower() == "true",
     }
 
@@ -697,11 +780,32 @@ def platform_event(
 
 @app.get("/demo/evidence")
 def demo_evidence() -> Dict[str, Any]:
+    service = get_service()
+    manifest = service.vault_manifest()
+    inventory = evidence_inventory()
+    by_id = {item["artifactId"]: item for item in inventory}
+    merged = []
+    for artifact in manifest.get("artifacts") or []:
+        merged.append({**by_id.get(artifact["artifactId"], {}), **artifact})
     return {
         "model": "gemini-3.5-flash",
         "project": os.getenv("GOOGLE_CLOUD_PROJECT", "boxwood-scope-364905"),
         "location": os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         "mockdrop_base_url": MOCKDROP_BASE_URL,
-        "evidence_inventory": evidence_inventory(),
+        "evidence_inventory": merged or inventory,
+        "evidence_vault": {
+            "backend": manifest["backend"],
+            "bucket": manifest.get("bucket"),
+            "demoKeySecret": manifest["demoKeySecret"],
+            "caseId": manifest["caseId"],
+            "synthetic": manifest["synthetic"],
+            "serverDecryptable": manifest["serverDecryptable"],
+            "status": manifest["status"],
+        },
         "policy_profile": POLICY_PROFILE,
     }
+
+
+@app.get("/demo/evidence/vault")
+def demo_evidence_vault() -> Dict[str, Any]:
+    return get_service().vault_manifest()

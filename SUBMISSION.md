@@ -56,31 +56,31 @@ AppealOS separates internal analysis from external action. `AnalysisConsent` all
 
 **Status and honesty**
 
-The rescue slice is live on Google Cloud: MockDrop provides a Node.js HTTP API with deterministic appeal/account transitions, stable request and response hashes, idempotent replay, receipt recovery, and seven passing integration tests; the AppealOS FastAPI service runs real Google ADK `LlmAgent` tasks over `gemini-3.5-flash` and uses Firestore for cases, mandates, receipts, and timelines. The repository adds case recovery, strict mandate enforcement, a hash-chained audit timeline, and a Pub/Sub push consumer. The deployed Pub/Sub topic/subscription/OIDC wiring and Evidence Vault are explicitly **planned**. A clickable single-page case workspace UI is live at https://appealos-606769518273.us-central1.run.app. Nothing in this submission claims a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration.
+The rescue slice is live on Google Cloud: MockDrop provides a Node.js HTTP API with deterministic appeal/account transitions, stable request and response hashes, idempotent replay, receipt recovery, and seven passing integration tests; the AppealOS FastAPI service runs real Google ADK `LlmAgent` tasks over `gemini-3.5-flash` and uses Firestore for cases, mandates, receipts, and timelines. The repository adds case recovery, strict mandate enforcement, a hash-chained audit timeline, and a Pub/Sub push consumer. The Evidence Vault is **implemented**: three synthetic artifacts are encrypted with AES-256-GCM into Cloud Storage, the demo key is read from Secret Manager at runtime, and plaintext/ciphertext hash plus AAD verification quarantines tampered evidence before citation or disclosure. The Pub/Sub topic/subscription/OIDC wiring is **deployed and verified**: MockDrop publishes supplement/decision events to `mockdrop-platform-events`, a push subscription delivers them to `POST /events/pubsub` with OIDC audience verification, and Firestore deduplicates by `externalEventId`. A clickable single-page case workspace UI is live at https://appealos-606769518273.us-central1.run.app. Nothing in this submission claims a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration.
 
 ### 1.4 Features and functionality
 
 - **Structured notice intake**: parses only the allowlisted synthetic notice into allegation type, incident window, normalized deadline, and confidence; uncertain parses pause for user review.
 - **Two-level user consent**: `AnalysisConsent` for internal evidence processing; a separate scoped `AppealMandate` for external action.
-- **User-selected evidence scope**: exactly three synthetic fixtures expose IDs, capture times, kinds, and content hashes; an encrypted Vault is not claimed in the MVP.
+- **User-selected evidence scope**: exactly three synthetic artifacts expose IDs, capture times, kinds, and content hashes; ciphertext is stored in Cloud Storage and the demo key in Secret Manager.
 - **Grounded claims**: every validated claim references only user-selected artifact IDs and allowlisted policy clause IDs.
 - **Versioned policy profile**: appeal claims map to a frozen MockDrop policy profile with clause IDs.
 - **Bounded external action**: one initial appeal submission, one authorized supplement, polling, and direct account-state verification under a single mandate.
-- **One approved execution**: after explicit consent and mandate approval, one call performs submit → authorized supplement → direct verification. A deduplicating Pub/Sub consumer implements the same supplement path in code; live event delivery remains planned.
+- **One approved execution**: after explicit consent and mandate approval, one call performs submit → authorized supplement → direct verification. The same supplement path is deployed through an OIDC-verified, deduplicating Pub/Sub consumer.
 - **Receipt-before-celebration state machine**: distinguishes `SUBMITTED`, `ACKNOWLEDGED`, `DECIDED_APPROVED`, and directly verified `ACCOUNT_ACTIVE`.
 - **Action timeline**: records actor, time, correlation ID, case version, event hash, and receipt references without exposing raw evidence or tokens.
 - **Due Process Audit Export**: downloads a synthetic JSON case record whose event hash chain can be verified and detects local tampering.
 - **Deterministic safety guards**: model output cannot authorize actions or write case state; destination, method, path, evidence fields, byte limits, deadlines, and idempotency are enforced in code.
-- **Verified test evidence**: 31 Python tests cover authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, health evidence, and tamper detection; seven Node HTTP tests cover MockDrop state, receipts, and idempotency.
+- **Verified test evidence**: 37 Python tests cover authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, health evidence, Evidence Vault hash/AAD verification, and tamper quarantine; seven Node HTTP tests cover MockDrop state, receipts, and idempotency.
 
 ### 1.5 Technologies used
 
 - **Gemini 3.5+** (`gemini-3.5-flash`, Vertex AI `global` endpoint): structured notice extraction, evidence relevance, policy-to-fact matching, response classification, and grounded drafting. The model interprets; it does not authorize actions or write case state.
 - **Google ADK**: real `LlmAgent` runners with typed structured outputs for notice extraction, evidence relevance, and grounded claim drafting.
-- **Cloud Run**: two deployed rescue services — `appealos` (https://appealos-agrdlgr4ea-uc.a.run.app) and `mockdrop` (https://mockdrop-agrdlgr4ea-uc.a.run.app). The current deployment uses the project's default compute service identity; separate least-privilege identities are planned.
+- **Cloud Run**: two deployed rescue services — `appealos` (https://appealos-agrdlgr4ea-uc.a.run.app) and `mockdrop` (https://mockdrop-agrdlgr4ea-uc.a.run.app). `appealos` runs under the dedicated `appealos-runtime` service account with scoped Storage/Secret Manager, Firestore, and Vertex AI permissions; `mockdrop` runs under the dedicated `mockdrop-pubsub` service account with topic-scoped `roles/pubsub.publisher`.
 - **Firestore**: implemented durable workflow authority for the case, mandate, receipts, event history, and external-event deduplication.
-- **Cloud Storage + Secret Manager**: encrypted synthetic evidence and demo key storage (planned for cloud).
-- **Cloud Pub/Sub**: env-gated publisher and idempotent push consumer implemented in code; deployed topic/subscription/OIDC delivery is planned.
+- **Cloud Storage + Secret Manager**: implemented synthetic Evidence Vault — AES-256-GCM ciphertext in Cloud Storage and the demo AES key in Secret Manager. The UI labels the Vault as synthetic and server-decryptable; it is not zero-knowledge, immutable, or independently verifiable.
+- **Cloud Pub/Sub**: env-gated publisher and idempotent push consumer are deployed; topic `mockdrop-platform-events`, push subscription `appealos-mockdrop-events-push`, and OIDC audience verification are live and verified.
 - **Cloud Logging**: redacted metadata and structured logs without raw evidence or secrets.
 - **Node.js**: implemented local MockDrop API and integration tests.
 - **Python FastAPI + static HTML/JS**: FastAPI/ADK service and a single-page case workspace UI (status timeline, consent/mandate controls, evidence cards, outcome export) are implemented; a compiled React UI is not claimed.
@@ -144,31 +144,31 @@ AppealOS 把内部分析与外部行动分离。`AnalysisConsent` 只能处理�
 
 **状态与诚实声明**
 
-救援切片已在 Google Cloud 跑通：MockDrop 提供 Node.js HTTP API 与 7 个通过的集成测试；AppealOS FastAPI 服务通过真实 Google ADK `LlmAgent` 调用 `gemini-3.5-flash`，并用 Firestore 保存案件、授权、回执与时间线。仓库版本新增 case 恢复、严格 mandate 校验、哈希链审计时间线与 Pub/Sub push consumer。已部署 Pub/Sub/OIDC 接线和 Evidence Vault 明确标记为 **planned**。本提交不声称任何真实平台集成。
+救援切片已在 Google Cloud 跑通：MockDrop 提供 Node.js HTTP API 与 7 个通过的集成测试；AppealOS FastAPI 服务通过真实 Google ADK `LlmAgent` 调用 `gemini-3.5-flash`，并用 Firestore 保存案件、授权、回执与时间线。仓库版本新增 case 恢复、严格 mandate 校验、哈希链审计时间线与 Pub/Sub push consumer。Evidence Vault 现已**实现**：三份合成证据以 AES-256-GCM 加密存入 Cloud Storage，demo key 由运行时从 Secret Manager 读取，并在引用/披露前校验 plaintext/ciphertext hash 与 AAD，校验失败即隔离。Pub/Sub topic/subscription/OIDC 接线**已部署并验证**：MockDrop 将补证/决策事件发布到 `mockdrop-platform-events`，push subscription 将事件投递到 `POST /events/pubsub` 并进行 OIDC audience 校验，Firestore 按 `externalEventId` 去重。本提交不声称任何真实平台集成。
 
 ### 2.4 功能与能力
 
 - **结构化通知解析**：仅解析白名单内的合成通知，产出指控类型、事件窗口、标准化期限与置信度；不确定时暂停待用户复核。
 - **两级用户同意**：`AnalysisConsent` 用于内部证据处理；独立的受限 `AppealMandate` 用于外部行动。
-- **用户选择的证据范围**：三份合成 fixture 提供 ID、采集时间、类型与内容哈希；MVP 不声称已实现加密 Vault。
+- **用户选择的证据范围**：三份合成证据提供 ID、采集时间、类型与内容哈希；密文存 Cloud Storage，demo key 存 Secret Manager。
 - **有依据的主张**：每条已验证主张只能引用用户选择的证据 ID 与白名单政策条款 ID。
 - **版本化政策档案**：申诉主张映射到冻结的 MockDrop 政策条款 ID。
 - **受限外部行动**：单次申诉提交、单次已授权补证、轮询与账户状态直接核验，全部在同一授权下完成。
-- **一次批准后的执行**：明确批准 consent 与 mandate 后，一次调用完成提交、授权补证与直接核验；相同补证路径的 Pub/Sub consumer 已在代码中实现，线上事件投递仍属 planned。
+- **一次批准后的执行**：明确批准 consent 与 mandate 后，一次调用完成提交、授权补证与直接核验；相同补证路径已通过带 OIDC 校验的 Pub/Sub consumer 线上部署。
 - **先有回执再庆祝**：区分 `SUBMITTED`、`ACKNOWLEDGED`、`DECIDED_APPROVED` 与直接核验的 `ACCOUNT_ACTIVE`。
 - **行动时间线**：记录行为主体、时间、关联 ID、案件版本、事件哈希与回执引用，不暴露原始证据或令牌。
 - **Due Process 审计导出**：下载脱敏、哈希一致的 JSON 案件记录，用于人工升级。
 - **确定性安全护栏**：模型输出不能授权动作或写案件状态；目标、方法、路径、证据字段、字节上限、期限与幂等由代码强制。
-- **已验证测试证据**：31 个 Python 测试覆盖授权、恢复、并发事件、自主执行、Pub/Sub、health evidence 与篡改检测；7 个 Node HTTP 测试覆盖 MockDrop 状态、回执与幂等。
+- **已验证测试证据**：37 个 Python 测试覆盖授权、恢复、并发事件、自主执行、Pub/Sub、health evidence、Evidence Vault hash/AAD 校验与篡改隔离；7 个 Node HTTP 测试覆盖 MockDrop 状态、回执与幂等。
 
 ### 2.5 使用技术
 
 - **Gemini 3.5+**（`gemini-3.5-flash`，Vertex AI `global` endpoint）：结构化通知抽取、证据相关性、政策与事实匹配、回复分类与有依据的起草。模型只解释，不授权动作或写案件状态。
 - **Google ADK**：真实 `LlmAgent` runner 与类型化结构输出，用于通知解析、证据相关性和有依据的主张起草。
-- **Cloud Run**：两个已部署救援服务——`appealos` 与 `mockdrop`。当前部署使用项目默认 compute service identity；独立最小权限身份仍属 planned。
+- **Cloud Run**：两个已部署救援服务——`appealos` 与 `mockdrop`。`appealos` 使用独立 `appealos-runtime` 服务账号，并对 Storage/Secret Manager 使用资源级权限、Firestore/Vertex AI 使用项目级最小权限；`mockdrop` 使用独立 `mockdrop-pubsub` 服务账号，仅授予 topic 级 `roles/pubsub.publisher`。
 - **Firestore**：已实现的持久工作流权威，保存案件、授权、回执、事件历史与外部事件去重状态。
-- **Cloud Storage + Secret Manager**：加密合成证据与演示密钥存储（cloud 阶段 planned）。
-- **Cloud Pub/Sub**：env-gated publisher 与幂等 push consumer 已在代码中实现；线上 topic/subscription/OIDC 投递属 planned。
+- **Cloud Storage + Secret Manager**：已实现的合成 Evidence Vault——AES-256-GCM 密文存 Cloud Storage，demo AES key 存 Secret Manager。UI 明确标注其为合成且可由服务端解密，不声称零知识、不可变或可独立验证。
+- **Cloud Pub/Sub**：env-gated publisher 与幂等 push consumer 已部署；topic `mockdrop-platform-events`、push subscription `appealos-mockdrop-events-push` 与 OIDC audience 校验已上线并验证。
 - **Cloud Logging**：脱敏元数据与结构化日志，不含原始证据或密钥。
 - **Node.js**：已实现的本地 MockDrop API 与集成测试。
 - **Python FastAPI + 静态 HTML/JS**：FastAPI/ADK 服务与单页 case workspace UI（状态时间线、consent/mandate 控制、evidence 卡、outcome 导出）已实现；未声称编译型 React UI。
@@ -207,7 +207,7 @@ AppealOS 只使用合成 fixture 与公开参考资料，不摄取真实用户�
 - [ ] 工程师回填确切 Gemini model ID、endpoint、region 与 ADK version（部署 smoke test 后）。
 - [ ] 用户回填 `[DEMO_VIDEO_URL]`（YouTube/Vimeo/Drive 外链）；仓库地址已回填为 https://github.com/rectinajh/AppealOS。
 - [ ] 仓库公开可见且未提交 `.env`、`.pem`、`.key` 或任何 API key。
-- [ ] 演示视频 ≤ 4 分钟，且展示 Gemini、ADK、Cloud Run 与外部状态变化证据；Pub/Sub 若未线上接通必须明确标注为 code-complete / not deployed。
+- [ ] 演示视频 ≤ 4 分钟，且展示 Gemini、ADK、Cloud Run、Pub/Sub/OIDC 与外部状态变化证据；Pub/Sub/OIDC 已线上接通，可在视频中如实标注 deployed and verified。
 - [ ] README 的 `Submission / Devpost` 小节与 `SUBMISSION.md` 一致；如与工程师 README 改动冲突，以本 `SUBMISSION.md` 为准。
 
 ### 回填项 / Placeholders to backfill

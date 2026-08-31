@@ -285,6 +285,7 @@ class DemoCase:
     appealId: Optional[str] = None
     platformReceipts: List[Dict[str, Any]] = field(default_factory=list)
     timeline: List[Dict[str, Any]] = field(default_factory=list)
+    quarantinedArtifactIds: List[str] = field(default_factory=list)
     version: int = 0
     createdAt: str = field(default_factory=lambda: _dt.datetime.now(_dt.timezone.utc).isoformat())
     updatedAt: str = field(default_factory=lambda: _dt.datetime.now(_dt.timezone.utc).isoformat())
@@ -372,6 +373,7 @@ class DemoCase:
             "createdAt": self.createdAt,
             "updatedAt": self.updatedAt,
             "timeline": self.timeline,
+            "quarantinedArtifactIds": self.quarantinedArtifactIds,
             "timelineIntegrity": {
                 "verified": self.verify_timeline(),
                 "headHash": self.timeline[-1].get("eventHash") if self.timeline else None,
@@ -405,6 +407,7 @@ class DemoCase:
             appealId=data.get("appealId"),
             platformReceipts=data.get("platformReceipts") or [],
             timeline=data.get("timeline") or [],
+            quarantinedArtifactIds=data.get("quarantinedArtifactIds") or [],
             version=data.get("version", 0),
             createdAt=data.get("createdAt", ""),
             updatedAt=data.get("updatedAt", ""),

@@ -991,7 +991,7 @@
         <div class="panel-head">
           <div>
             <h2>Evidence</h2>
-            <p>Toggle artifacts, then expand to inspect hashes.</p>
+            <p>Toggle artifacts, then expand to inspect hashes. Vault evidence is synthetic and server-decryptable; it is not user-held custody.</p>
           </div>
           <span class="panel-hint">Selects consent scope</span>
         </div>
@@ -1459,8 +1459,10 @@
             '</div>' +
             '<div class="evidence-meta">Captured ' + escapeHtml(formatDate(item.capturedAt)) + '</div>' +
             '<div class="evidence-body">' +
-              '<div class="hash-row"><span class="hash-label">sha256</span><code>' + escapeHtml(item.plaintextSha256 || "") + '</code></div>' +
-              '<div class="hash-row"><span class="hash-label">artifact id</span><code>' + escapeHtml(item.artifactId) + '</code></div>' +
+              '<div class="hash-row"><span class="hash-label">plaintext sha256</span><code>' + escapeHtml(item.plaintextSha256 || "") + '</code></div>' +
+              '<div class="hash-row"><span class="hash-label">ciphertext sha256</span><code>' + escapeHtml(item.ciphertextSha256 || "not persisted") + '</code></div>' +
+              '<div class="hash-row"><span class="hash-label">storage uri</span><code>' + escapeHtml(item.storageUri || "") + '</code></div>' +
+              '<div class="hash-row"><span class="hash-label">vault mode</span><code>synthetic · server-decryptable</code></div>' +
             '</div>' +
           '</article>'
         )).join("");

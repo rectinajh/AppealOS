@@ -12,11 +12,11 @@
 
 - Case workspace: https://appealos-606769518273.us-central1.run.app
 - Verified flow: `Reset → Parse notice → Consent → Mandate → Submit → Supplement → Verify`, ending in `ACCOUNT_ACTIVE`.
-- Live backend check: `GET /health` returns `storeBackend: firestore` and `revision: appealos-00004-9cb`; the case timeline is hash-chained and returns `verified: true`.
+- Live backend check: `GET /health` returns `storeBackend: firestore`, `evidenceVaultBackend: gcs`, `pubsubOidcVerification: true`, and `revision: appealos-00008-cf6`; the case timeline is hash-chained and returns `verified: true`.
 
 ## Project status
 
-**Rescue slice live on Google Cloud; award-readiness upgrade deployed and verified.** The live revisions (`appealos-00004-9cb`, `mockdrop-00003-77m`) prove real Gemini 3.5 Flash calls through Google ADK, two Cloud Run services, Firestore persistence, typed MockDrop writes, strict artifact/destination/expiry checks, case recovery by ID, an explicit Pub/Sub push route, a hash-chained timeline, and one approved execution call that returns `ACCOUNT_ACTIVE`. The Evidence Vault and deployed Pub/Sub/OIDC wiring remain planned.
+**Rescue slice live on Google Cloud; Pub/Sub/OIDC and Evidence Vault deployed and verified.** The live revisions (`appealos-00008-cf6`, `mockdrop-00004-6xh`) prove real Gemini 3.5 Flash calls through Google ADK, two Cloud Run services, Firestore persistence, typed MockDrop writes, strict artifact/destination/expiry checks, case recovery by ID, an OIDC-verified Pub/Sub push route, a hash-chained timeline, and one approved execution call that returns `ACCOUNT_ACTIVE`. The Evidence Vault stores AES-256-GCM ciphertext in Cloud Storage, reads the demo AES key from Secret Manager, and quarantines tampered evidence before citation/disclosure.
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
@@ -51,7 +51,7 @@ AppealOS joins the suspension notice, user-directed evidence, policy rules, dead
 6. compile grounded claim units;
 7. obtain a scoped `AppealMandate`;
 8. submit through a typed platform adapter;
-9. react to an asynchronous supplement request;
+9. react to an asynchronous supplement request delivered through deployed Pub/Sub;
 10. verify a clear result: restored, rejected, or human escalation.
 
 ## The 48-hour proof
@@ -63,7 +63,7 @@ The hackathon scope is deliberately narrow:
 - exactly three evidence artifacts: one delivery receipt, one GPS trace, and one device log;
 - one frozen policy profile;
 - one initial appeal submission;
-- one supplement request returned by MockDrop, plus a code-complete Pub/Sub push consumer;
+- one supplement request returned by MockDrop and delivered through a deployed, OIDC-verified Pub/Sub push consumer;
 - one authorized supplement;
 - one verified account transition from `SUSPENDED` to `ACTIVE`;
 - one in-memory synthetic evidence fixture set with hashes (not an encrypted Vault);
@@ -104,12 +104,13 @@ AppealOS currently provides:
 - a post-approval `/demo/run` execution that performs submit → supplement → verify and returns `ACCOUNT_ACTIVE` without fabricating user consent;
 - strict consent/mandate checks for expiry, adapter, account, action, artifact, supplement template, and cycle count;
 - case reload by ID and a hash-chain verification endpoint for the action timeline;
-- 32 Python tests covering authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, endpoint evidence, and tamper detection.
+- a synthetic Evidence Vault backed by Cloud Storage and Secret Manager, with plaintext/ciphertext hash and AAD verification before evidence citation or disclosure;
+- 37 Python tests covering authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, endpoint evidence, Evidence Vault verification, and tamper quarantine.
 
 Deployed Cloud Run URLs:
 
-- MockDrop (`mockdrop-00003-77m`): https://mockdrop-606769518273.us-central1.run.app
-- AppealOS (`appealos-00004-9cb`): https://appealos-606769518273.us-central1.run.app
+- MockDrop (`mockdrop-00004-6xh`): https://mockdrop-606769518273.us-central1.run.app
+- AppealOS (`appealos-00008-cf6`): https://appealos-606769518273.us-central1.run.app
 
 Deployment logs, reproducible commands, and runtime evidence: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
@@ -141,6 +142,10 @@ export MOCKDROP_BASE_URL=https://mockdrop-606769518273.us-central1.run.app
 # Durable storage: firestore uses GOOGLE_CLOUD_PROJECT; memory is the local default.
 export APPEALOS_STORE_BACKEND=firestore
 export GOOGLE_CLOUD_PROJECT=boxwood-scope-364905
+# Evidence Vault: memory fallback by default; gcs reads Cloud Storage + Secret Manager.
+export APPEALOS_EVIDENCE_BACKEND=gcs
+export APPEALOS_EVIDENCE_BUCKET=appealos-evidence-vault
+export APPEALOS_EVIDENCE_KEY_SECRET=appealos-demo-evidence-key
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
@@ -179,13 +184,14 @@ flowchart LR
     U["User"] --> A["AppealOS UI + ADK Runtime · Cloud Run"]
     A --> F[("Firestore · workflow authority")]
     A --> G["Gemini 3.5 Flash · Vertex AI"]
+    A --> V[("Evidence Vault · Cloud Storage + Secret Manager")]
     A -->|"fixed adapter + idempotency key"| M["MockDrop · separate Cloud Run service"]
-    M -. "optional Pub/Sub push · code complete" .-> A
+    M -. "deployed Pub/Sub push · OIDC verified" .-> A
     A -->|"direct status verification"| M
     A --> L["Cloud Logging · structured runtime metadata"]
 ```
 
-The synchronous demo uses the supplement request in MockDrop's typed response. MockDrop publication and AppealOS consumption are implemented behind flags; a live topic, subscription, and OIDC-enforced delivery are not claimed until deployed and verified.
+The synchronous demo can use the supplement request in MockDrop's typed response. The deployed path also publishes that request to `mockdrop-platform-events`, delivers it to `POST /events/pubsub` with OIDC verification, and deduplicates it in Firestore before taking the authorized supplement action.
 
 ## Gemini, ADK, and deterministic code
 
@@ -260,7 +266,7 @@ The GCP running-evidence segment now has live `.run.app` URLs, Cloud Run deploy 
 └── tests/              # proposed state, mandate, adapter, and security tests
 ```
 
-`apps/mockdrop` and `apps/appealos` exist today. Firestore persistence, case recovery, the Pub/Sub consumer route, strict mandate enforcement, and the single-page workspace are implemented in code. Encrypted fixture packaging and deployed Pub/Sub/OIDC remain implementation targets.
+`apps/mockdrop` and `apps/appealos` exist today. Firestore persistence, case recovery, the OIDC-verified Pub/Sub consumer route, strict mandate enforcement, the Evidence Vault, and the single-page workspace are implemented and deployed. Real-platform adapters remain out of scope.
 
 ## Safety boundaries
 

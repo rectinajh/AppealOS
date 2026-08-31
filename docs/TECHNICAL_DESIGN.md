@@ -489,21 +489,27 @@ The genesis `previousEventHash` is 64 zeroes. JavaScript and Python must share a
 
 It excludes owner tokens, encryption keys, raw evidence, coordinates, full device IDs, full prompts, and secrets. The export proves internal hash consistency only. It is not signed, externally anchored, immutable, or independently authentic.
 
-## 14. Target evidence encryption (not implemented)
+## 14. Evidence encryption (implemented)
 
-The public MVP currently uses fixed in-memory synthetic fixtures with content hashes. The following Cloud Storage/Secret Manager design is planned:
+The Evidence Vault is implemented as a synthetic, server-decryptable prototype:
 
-1. A seed script calculates the plaintext SHA-256.
+1. A seed script calculates the plaintext SHA-256 for each fixture.
 2. It generates a unique random 96-bit nonce per artifact.
-3. It encrypts with AES-256-GCM.
+3. It encrypts the canonical JSON plaintext with AES-256-GCM.
 4. AAD is canonical `{schemaVersion, caseId, artifactId, plaintextSha256}`.
-5. Cloud Storage receives nonce, AAD, ciphertext, and authentication tag.
-6. Secret Manager stores the demo AES key.
-7. AppealOS decrypts the minimum allowed fixture in memory after permission checks and releases references on a best-effort basis.
+5. Cloud Storage stores the envelope with nonce, AAD, ciphertext, authentication tag, hashes, MIME type, and storage URI.
+6. Secret Manager stores the 32-byte demo AES key; AppealOS reads it at runtime and never puts it in code, logs, or the repository.
+7. Before citation or disclosure, AppealOS verifies the plaintext hash, ciphertext hash, and canonical AAD; mismatch quarantines the artifact and blocks the workflow step.
 
-Managed Python does not guarantee secure memory erasure. The server can decrypt fixtures. The UI must not describe this as zero-knowledge or exclusively user-held custody.
+Boundaries stated honestly:
 
-## 15. Target authentication and service identity (not implemented)
+- The fixtures are synthetic and the server can decrypt them with the demo key.
+- The Vault is not zero-knowledge, not user-held custody, not immutable, and not independently verifiable.
+- Managed Python does not guarantee secure memory erasure.
+
+## 15. Target authentication and service identity (partially implemented)
+
+The deployed `appealos` runtime now uses the dedicated `appealos-runtime` service account with scoped Storage/Secret Manager permissions. The remaining browser-owner and service-to-service OIDC pieces are planned:
 
 ### Browser demo owner
 
