@@ -1,8 +1,7 @@
-"""Google ADK root agent used by the AppealOS rescue runtime.
+"""Structured Google ADK agents used by the AppealOS rescue runtime.
 
-The root agent is `appeal_runtime_agent`.  Specialized single-turn ADK agents
-perform structured extraction/drafting, and deterministic domain code performs
-every state transition and external write.
+Single-turn ADK agents perform typed extraction and drafting. Deterministic
+domain code performs every authorization check, state transition, and write.
 """
 
 from __future__ import annotations
@@ -20,10 +19,6 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from pydantic import BaseModel, Field
 
-from .domain import (
-    EVIDENCE_ARTIFACTS,
-    POLICY_PROFILE,
-)
 from .gemini import GEMINI_MODEL_ID, build_vertex_client
 
 LOGGER = logging.getLogger("appealos.adk")
@@ -62,27 +57,6 @@ class ClaimDraftList(BaseModel):
     claims: List[ClaimUnit]
 
 
-def _lookup_evidence_fixture(artifact_id: str) -> Dict[str, Any]:
-    """Read-only tool: expose one synthetic fixture by its fixed allowlisted id."""
-    artifact = EVIDENCE_ARTIFACTS.get(artifact_id)
-    if artifact is None:
-        return {"error": f"unknown artifact {artifact_id}"}
-    return {
-        "artifactId": artifact["artifactId"],
-        "kind": artifact["kind"],
-        "capturedAt": artifact["capturedAt"],
-        "plaintext": artifact["plaintext"],
-    }
-
-
-def _lookup_policy_clause(clause_id: str) -> Dict[str, str]:
-    """Read-only tool: expose one frozen synthetic policy clause."""
-    clause = POLICY_PROFILE["clauses"].get(clause_id)
-    if clause is None:
-        return {"error": f"unknown policy clause {clause_id}"}
-    return {"clauseId": clause_id, "text": clause}
-
-
 class ADKEngine:
     """Thin wrapper that runs structured ADK agents over Gemini 3.5+."""
 
@@ -90,25 +64,6 @@ class ADKEngine:
         self.model = Gemini(model=GEMINI_MODEL_ID, client=build_vertex_client())
         self.session_service = InMemorySessionService()
         self._agents: Dict[str, LlmAgent] = {}
-
-    @property
-    def root_agent(self) -> LlmAgent:
-        """The single ADK root agent for the rescue runtime."""
-        return LlmAgent(
-            name="appeal_runtime_agent",
-            description=(
-                "AppealOS root agent. It interprets notices and drafts claims "
-                "only; deterministic code authorizes actions and writes state."
-            ),
-            model=self.model,
-            instruction=(
-                "You are the AppealOS reasoning engine. You may only inspect "
-                "the three fixed synthetic evidence artifacts and the frozen "
-                "policy profile. Never authorize actions, compute deadlines, "
-                "or declare an account active."
-            ),
-            tools=[_lookup_evidence_fixture, _lookup_policy_clause],
-        )
 
     def _agent_for(
         self,

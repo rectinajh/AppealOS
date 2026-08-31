@@ -96,6 +96,7 @@ POLICY_PROFILE = {
 
 ALLOWED_CLAIM_TYPES = {"OBSERVED_EVENT", "CAUSAL_EXPLANATION", "POLICY_REQUEST"}
 ALLOWED_PURPOSES = {"TIMELINE", "POLICY_MATCH", "DRAFT_CLAIMS"}
+DEFAULT_ANALYSIS_PURPOSES = ["TIMELINE", "POLICY_MATCH", "DRAFT_CLAIMS"]
 
 STATES = [
     "NOTICE_RECEIVED",
@@ -142,6 +143,14 @@ def sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def parse_datetime(value: str) -> _dt.datetime:
+    """Parse an ISO timestamp as an aware datetime for authorization checks."""
+    parsed = _dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=_dt.timezone.utc)
+    return parsed
+
+
 def _assert_fixture_hash() -> None:
     actual = sha256_canonical(DEVICE_LOG_FIXTURE)
     if actual != DEVICE_LOG_SHA256:
@@ -177,19 +186,27 @@ class AnalysisConsent:
 
     @classmethod
     def create(cls, case_id: str, artifact_ids: List[str], now: _dt.datetime) -> "AnalysisConsent":
-        if not set(artifact_ids).issubset(EVIDENCE_ARTIFACTS):
+        requested = list(dict.fromkeys(artifact_ids))
+        if not requested:
+            raise ValueError("At least one evidence artifact must be selected")
+        if not set(requested).issubset(EVIDENCE_ARTIFACTS):
             raise ValueError("Unknown evidence artifact in consent")
-        if not set(purposes := ALLOWED_PURPOSES).issubset(ALLOWED_PURPOSES):
-            raise ValueError("Unknown consent purpose")
         return cls(
             consentId=f"consent-{uuid.uuid4()}",
             caseId=case_id,
-            artifactIds=list(artifact_ids),
-            purposes=list(purposes),
+            artifactIds=requested,
+            purposes=list(DEFAULT_ANALYSIS_PURPOSES),
             allowGeminiProcessing=True,
             approvedAt=now.isoformat(),
             expiresAt=(now + _dt.timedelta(hours=1)).isoformat(),
         )
+
+    def is_active(self, now: Optional[_dt.datetime] = None) -> bool:
+        instant = now or _dt.datetime.now(_dt.timezone.utc)
+        return self.allowGeminiProcessing and instant < parse_datetime(self.expiresAt)
+
+    def allows_artifact(self, artifact_id: str) -> bool:
+        return artifact_id in self.artifactIds
 
 
 @dataclass
@@ -207,12 +224,47 @@ class AppealMandate:
     approvedAt: str
     expiresAt: str
 
-    def allows(self, action: str) -> bool:
-        return action in self.allowedActions
+    def is_active(self, now: Optional[_dt.datetime] = None) -> bool:
+        instant = now or _dt.datetime.now(_dt.timezone.utc)
+        return instant < parse_datetime(self.expiresAt)
 
-    def can_supplement(self) -> bool:
+    def allows(
+        self,
+        action: str,
+        *,
+        destination_adapter: Optional[str] = None,
+        destination_account_id: Optional[str] = None,
+        now: Optional[_dt.datetime] = None,
+    ) -> bool:
+        if action not in self.allowedActions or not self.is_active(now):
+            return False
+        if destination_adapter is not None and destination_adapter != self.destinationAdapter:
+            return False
+        if destination_account_id is not None and destination_account_id != self.destinationAccountId:
+            return False
+        return True
+
+    def allows_artifact(self, artifact_id: str) -> bool:
+        return artifact_id in self.approvedArtifactIds
+
+    def can_supplement(
+        self,
+        artifact_id: str,
+        template: str,
+        *,
+        destination_adapter: Optional[str] = None,
+        destination_account_id: Optional[str] = None,
+        now: Optional[_dt.datetime] = None,
+    ) -> bool:
         return (
-            self.allows("SUPPLEMENT")
+            self.allows(
+                "SUPPLEMENT",
+                destination_adapter=destination_adapter,
+                destination_account_id=destination_account_id,
+                now=now,
+            )
+            and self.allows_artifact(artifact_id)
+            and template == self.allowedSupplementTemplate
             and self.supplementCyclesUsed < self.maxSupplementCycles
         )
 
@@ -257,9 +309,29 @@ class DemoCase:
             "state": self.state,
             "createdAt": self.updatedAt,
             "data": data or {},
+            "previousEventHash": (
+                self.timeline[-1].get("eventHash") if self.timeline else None
+            ),
         }
+        event["eventHash"] = sha256_canonical(event)
         self.timeline.append(event)
         return event
+
+    def verify_timeline(self) -> bool:
+        previous_hash: Optional[str] = None
+        for event in self.timeline:
+            if event.get("previousEventHash") != previous_hash:
+                return False
+            claimed_hash = event.get("eventHash")
+            if not claimed_hash:
+                return False
+            unsigned_event = {
+                key: value for key, value in event.items() if key != "eventHash"
+            }
+            if sha256_canonical(unsigned_event) != claimed_hash:
+                return False
+            previous_hash = claimed_hash
+        return True
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -272,6 +344,7 @@ class DemoCase:
             "deadlineAt": self.deadlineAt,
             "consent": {
                 "consentId": self.consent.consentId,
+                "artifactIds": self.consent.artifactIds,
                 "purposes": self.consent.purposes,
                 "allowGeminiProcessing": self.consent.allowGeminiProcessing,
                 "approvedAt": self.consent.approvedAt,
@@ -282,6 +355,7 @@ class DemoCase:
             "mandate": {
                 "mandateId": self.mandate.mandateId,
                 "destinationAdapter": self.mandate.destinationAdapter,
+                "destinationAccountId": self.mandate.destinationAccountId,
                 "allowedActions": self.mandate.allowedActions,
                 "approvedClaimIds": self.mandate.approvedClaimIds,
                 "approvedArtifactIds": self.mandate.approvedArtifactIds,
@@ -298,6 +372,10 @@ class DemoCase:
             "createdAt": self.createdAt,
             "updatedAt": self.updatedAt,
             "timeline": self.timeline,
+            "timelineIntegrity": {
+                "verified": self.verify_timeline(),
+                "headHash": self.timeline[-1].get("eventHash") if self.timeline else None,
+            },
         }
 
     def to_persistable(self) -> Dict[str, Any]:

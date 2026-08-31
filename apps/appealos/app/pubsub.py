@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import logging
 import os
@@ -29,10 +30,14 @@ def decode_push_message(payload: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
         raise PubSubMessageError("Push payload is missing message")
     message_id = str(message.get("messageId") or "")
     raw = message.get("data")
-    if isinstance(raw, str):
-        data_bytes = base64.b64decode(raw.encode("ascii"))
-    else:
-        data_bytes = base64.b64decode(raw)
+    if not message_id:
+        raise PubSubMessageError("Push message is missing messageId")
+    if not isinstance(raw, str) or not raw:
+        raise PubSubMessageError("Push message is missing base64 data")
+    try:
+        data_bytes = base64.b64decode(raw.encode("ascii"), validate=True)
+    except (UnicodeEncodeError, binascii.Error) as exc:
+        raise PubSubMessageError("Push message data is not valid base64") from exc
     try:
         event = json.loads(data_bytes.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -51,12 +56,19 @@ def verify_push_token(authorization_header: Optional[str]) -> None:
     if not PUBSUB_VERIFY_OIDC:
         return
 
+    from google.auth.transport import requests as google_requests  # type: ignore
     from google.oauth2 import id_token  # type: ignore
 
+    if not PUBSUB_AUDIENCE:
+        raise PubSubMessageError("PUBSUB_AUDIENCE is required when OIDC verification is enabled")
     if not authorization_header or not authorization_header.startswith("Bearer "):
         raise PubSubMessageError("Missing bearer token on Pub/Sub push")
     token = authorization_header[len("Bearer ") :]
     try:
-        id_token.verify_oauth2_token(token, None, audience=PUBSUB_AUDIENCE)
+        id_token.verify_oauth2_token(
+            token,
+            google_requests.Request(),
+            audience=PUBSUB_AUDIENCE,
+        )
     except Exception as exc:  # pragma: no cover - depends on GCP token
         raise PubSubMessageError(f"Pub/Sub OIDC verification failed: {exc}") from exc

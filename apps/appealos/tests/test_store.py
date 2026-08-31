@@ -61,6 +61,12 @@ class DemoCaseRoundTripTest(unittest.TestCase):
         self.assertEqual(restored.mandate.mandateId, "mandate-1")
         self.assertEqual(len(restored.timeline), 2)
 
+    def test_timeline_hash_chain_detects_tampering(self):
+        case = make_case()
+        self.assertTrue(case.verify_timeline())
+        case.timeline[0]["data"]["account"]["accountId"] = "tampered-account"
+        self.assertFalse(case.verify_timeline())
+
 
 class PubSubDecodeTest(unittest.TestCase):
     def test_decode_supplement_event(self):
@@ -82,6 +88,15 @@ class PubSubDecodeTest(unittest.TestCase):
         payload = {"message": {"messageId": "msg-1", "data": encoded}}
         with self.assertRaises(PubSubMessageError):
             decode_push_message(payload)
+
+    def test_decode_rejects_missing_message_id(self):
+        encoded = base64.b64encode(b"{}").decode()
+        with self.assertRaises(PubSubMessageError):
+            decode_push_message({"message": {"data": encoded}})
+
+    def test_decode_rejects_invalid_base64(self):
+        with self.assertRaises(PubSubMessageError):
+            decode_push_message({"message": {"messageId": "msg-1", "data": "***"}})
 
 
 if __name__ == "__main__":

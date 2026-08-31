@@ -877,11 +877,11 @@
         <div class="panel-head">
           <div>
             <h2>Flow controls</h2>
-            <p>Step through the deterministic appeal workflow.</p>
+            <p>Approve evidence once, then let the agent finish the platform workflow.</p>
           </div>
-          <button id="btn-run" class="btn btn-run" data-action="run">
+          <button id="btn-run" class="btn btn-run" data-action="run" disabled>
             <span class="btn-icon" data-icon="zap"></span>
-            <span>Run full flow</span>
+            <span>Execute approved mandate</span>
             <span class="spinner"></span>
             <span class="success-mark">✓</span>
           </button>
@@ -930,8 +930,8 @@
             <div class="step-rail"><span class="step-icon" data-icon="send"></span><span class="step-num">05</span></div>
             <div class="step-content">
               <div class="step-heading"><span class="step-title">Submit appeal</span><span class="step-status locked">Locked</span></div>
-              <p class="step-desc">Write the initial appeal to MockDrop and receive the receipt.</p>
-              <button id="btn-submit" class="step-action" data-action="submit" disabled><span class="step-action-icon" data-icon="send"></span><span class="step-action-label">Submit appeal</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+              <p class="step-desc">Agent writes the approved appeal to MockDrop and captures its receipt.</p>
+              <button id="btn-submit" class="step-action" data-action="submit" disabled hidden><span class="step-action-icon" data-icon="send"></span><span class="step-action-label">Submit appeal</span><span class="spinner"></span><span class="success-mark">✓</span></button>
             </div>
           </div>
 
@@ -939,8 +939,8 @@
             <div class="step-rail"><span class="step-icon" data-icon="upload"></span><span class="step-num">06</span></div>
             <div class="step-content">
               <div class="step-heading"><span class="step-title">Send supplement</span><span class="step-status locked">Locked</span></div>
-              <p class="step-desc">Submit the authorized device-log supplement.</p>
-              <button id="btn-supplement" class="step-action" data-action="supplement" disabled><span class="step-action-icon" data-icon="upload"></span><span class="step-action-label">Send supplement</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+              <p class="step-desc">Agent answers the platform request using only the authorized device log.</p>
+              <button id="btn-supplement" class="step-action" data-action="supplement" disabled hidden><span class="step-action-icon" data-icon="upload"></span><span class="step-action-label">Send supplement</span><span class="spinner"></span><span class="success-mark">✓</span></button>
             </div>
           </div>
 
@@ -948,8 +948,8 @@
             <div class="step-rail"><span class="step-icon" data-icon="check-circle"></span><span class="step-num">07</span></div>
             <div class="step-content">
               <div class="step-heading"><span class="step-title">Verify account</span><span class="step-status locked">Locked</span></div>
-              <p class="step-desc">Confirm the MockDrop account status is ACTIVE.</p>
-              <button id="btn-verify" class="step-action" data-action="verify" disabled><span class="step-action-icon" data-icon="check-circle"></span><span class="step-action-label">Verify account</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+              <p class="step-desc">Agent independently reads the platform account status before declaring success.</p>
+              <button id="btn-verify" class="step-action" data-action="verify" disabled hidden><span class="step-action-icon" data-icon="check-circle"></span><span class="step-action-label">Verify account</span><span class="spinner"></span><span class="success-mark">✓</span></button>
             </div>
           </div>
         </div>
@@ -1091,6 +1091,7 @@
     });
 
     let currentCase = null;
+    let currentCaseId = window.localStorage.getItem("appealos.caseId");
     let evidence = null;
     let toastTimer = null;
     let confirmTimer = null;
@@ -1172,6 +1173,8 @@
     function applyCase(data) {
       if (!data) return;
       currentCase = data.case ? data.case : data;
+      currentCaseId = currentCase.caseId;
+      window.localStorage.setItem("appealos.caseId", currentCaseId);
       renderCase();
       log("case updated → " + currentCase.state + " (v" + currentCase.version + ")");
     }
@@ -1265,9 +1268,10 @@
       buttons.notice.disabled = idx !== 0;
       buttons.consent.disabled = idx !== 1;
       buttons.mandate.disabled = idx !== 2;
-      buttons.submit.disabled = idx !== 3;
-      buttons.supplement.disabled = idx !== 5;
-      buttons.verify.disabled = idx !== 7;
+      buttons.submit.disabled = true;
+      buttons.supplement.disabled = true;
+      buttons.verify.disabled = true;
+      buttons.run.disabled = ![3, 5, 7].includes(idx);
       buttons.export.disabled = !currentCase;
 
       setResetStep(hasCase);
@@ -1347,44 +1351,44 @@
           applyCase(data);
           toast("Case reset complete");
         } else if (action === "notice") {
-          data = await api("/demo/notice", { method: "POST", body: "{}" });
+          data = await api("/demo/notice", { method: "POST", body: JSON.stringify({ case_id: currentCaseId }) });
           applyCase(data);
           toast("Notice parsed");
         } else if (action === "consent") {
           const artifactIds = selectedArtifactIds();
-          data = await api("/demo/consent", { method: "POST", body: JSON.stringify({ artifact_ids: artifactIds }) });
+          data = await api("/demo/consent", { method: "POST", body: JSON.stringify({ case_id: currentCaseId, artifact_ids: artifactIds }) });
           applyCase(data);
           toast("Consent granted");
         } else if (action === "mandate") {
-          data = await api("/demo/mandate", { method: "POST", body: "{}" });
+          data = await api("/demo/mandate", { method: "POST", body: JSON.stringify({ case_id: currentCaseId }) });
           applyCase(data);
           toast("Mandate approved");
         } else if (action === "submit") {
-          data = await api("/demo/submit", { method: "POST", body: "{}" });
+          data = await api("/demo/submit", { method: "POST", body: JSON.stringify({ case_id: currentCaseId }) });
           applyCase(data);
           toast("Appeal submitted");
         } else if (action === "supplement") {
-          data = await api("/demo/supplement", { method: "POST", body: "{}" });
+          data = await api("/demo/supplement", { method: "POST", body: JSON.stringify({ case_id: currentCaseId }) });
           applyCase(data);
           toast("Supplement sent");
         } else if (action === "verify") {
-          data = await api("/demo/verify", { method: "POST", body: "{}" });
+          data = await api("/demo/verify", { method: "POST", body: JSON.stringify({ case_id: currentCaseId }) });
           applyCase(data);
           toast("Account verified ACTIVE");
         } else if (action === "run") {
-          log("starting full binding flow…", "muted");
-          data = await api("/demo/run", { method: "POST", body: "{}" });
+          log("executing approved mandate: submit → supplement → verify…", "muted");
+          data = await api("/demo/run", { method: "POST", body: JSON.stringify({ case_id: currentCaseId }) });
           currentCase = data.case;
           renderCase();
-          log("full flow complete → " + data.final_state, "success");
-          toast("Full flow complete: " + data.final_state);
+          log("autonomous execution complete → " + data.final_state, "success");
+          toast("Mandate executed: " + data.final_state);
         } else if (action === "case") {
           await refreshCase();
           return;
         } else if (action === "export") {
           log("generating outcome export…", "muted");
           await new Promise((resolve) => window.setTimeout(resolve, 750));
-          data = await api("/demo/case");
+          data = await api("/demo/case/" + encodeURIComponent(currentCaseId));
           const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -1401,6 +1405,7 @@
       } catch (err) {
         log(action + " failed: " + err.message, "error");
         toast(err.message, true);
+        if (currentCaseId && action !== "reset") await refreshCase();
       } finally {
         setLoading(btn, false);
         updateButtons();
@@ -1409,19 +1414,27 @@
 
     function selectedArtifactIds() {
       const boxes = [...evidenceEl.querySelectorAll('.evidence-check:checked')];
-      if (boxes.length === 0) return null;
+      if (boxes.length === 0) return [];
       return boxes.map((box) => box.value);
     }
 
     async function refreshCase() {
+      if (!currentCaseId) {
+        currentCase = null;
+        renderEmpty();
+        log("no saved case yet; click Reset case", "warn");
+        return;
+      }
       try {
-        const data = await api("/demo/case");
+        const data = await api("/demo/case/" + encodeURIComponent(currentCaseId));
         currentCase = data;
         renderCase();
         log("case refreshed");
       } catch (err) {
-        if (err.status === 409) {
+        if (err.status === 404) {
           currentCase = null;
+          currentCaseId = null;
+          window.localStorage.removeItem("appealos.caseId");
           renderEmpty();
           log("no active case yet; click Reset case", "warn");
           return;
