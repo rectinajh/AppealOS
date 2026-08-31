@@ -6,3 +6,5 @@ uvicorn[standard]==0.52.4
 httpx==0.28.1
 pydantic==2.13.5
 certifi==2026.7.22
+google-cloud-firestore==2.29.0
+google-cloud-pubsub==2.39.2

@@ -20,6 +20,7 @@ import certifi
 os.environ.setdefault("SSL_CERT_FILE", certifi.where())
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from .agent import (
@@ -48,6 +49,7 @@ from .domain import (
     evidence_inventory,
 )
 from .mockdrop import MOCKDROP_BASE_URL, MockDropClient
+from .store import build_store
 
 LOGGER = logging.getLogger("appealos")
 
@@ -88,6 +90,7 @@ class DemoService:
     def __init__(self) -> None:
         self.adk = ADKEngine()
         self.mockdrop = MockDropClient()
+        self.store = build_store()
         self.case: Optional[DemoCase] = None
 
     # ------------------------------------------------------------------
@@ -190,6 +193,9 @@ class DemoService:
     # ------------------------------------------------------------------
     # Demo workflow steps
     # ------------------------------------------------------------------
+    def _save(self, case: DemoCase) -> None:
+        self.store.save(case)
+
     def require_case(self) -> DemoCase:
         if self.case is None:
             raise HTTPException(status_code=409, detail="Run /demo/reset first")
@@ -199,6 +205,7 @@ class DemoService:
         account = self.mockdrop.reset()["account"]
         self.case = DemoCase()
         self.case.record("DEMO_RESET", "SYSTEM", {"account": account}, "NOTICE_RECEIVED")
+        self._save(self.case)
         return {
             "case": self.case.to_dict(),
             "account": account,
@@ -219,6 +226,7 @@ class DemoService:
             {"extracted": extracted.model_dump(), "validated": parsed},
             "PARSED",
         )
+        self._save(case)
         return {"case": case.to_dict(), "parsed": parsed}
 
     def consent(self, artifact_ids: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -229,6 +237,7 @@ class DemoService:
         consent = AnalysisConsent.create(case.caseId, ids, _utcnow())
         case.consent = consent
         case.record("ANALYSIS_CONSENT_APPROVED", "USER", {"consentId": consent.consentId}, "CONSENTED")
+        self._save(case)
         return {"case": case.to_dict(), "consent": consent.__dict__}
 
     def mandate(self) -> Dict[str, Any]:
@@ -261,6 +270,7 @@ class DemoService:
             {"mandateId": mandate.mandateId, "approvedClaimIds": mandate.approvedClaimIds},
             "MANDATE_APPROVED",
         )
+        self._save(case)
         return {
             "case": case.to_dict(),
             "relevance": [item.model_dump() for item in relevance.items],
@@ -297,6 +307,7 @@ class DemoService:
             {"outboundEvent": response.get("outboundEvent")},
             "SUPPLEMENT_REQUESTED",
         )
+        self._save(case)
         return {"case": case.to_dict(), "appeal": response["appeal"], "receipt": receipt}
 
     def supplement(self) -> Dict[str, Any]:
@@ -331,6 +342,7 @@ class DemoService:
             {"appeal": response["appeal"], "account": response.get("account"), "outboundEvent": response.get("outboundEvent")},
             next_state,
         )
+        self._save(case)
         return {"case": case.to_dict(), "appeal": response["appeal"], "account": response.get("account")}
 
     def verify(self) -> Dict[str, Any]:
@@ -346,6 +358,7 @@ class DemoService:
             {"account": account, "verifiedBy": "GET /v1/accounts"},
             "ACCOUNT_ACTIVE",
         )
+        self._save(case)
         return {"case": case.to_dict(), "account": account}
 
     def run_all(self) -> Dict[str, Any]:
@@ -400,10 +413,12 @@ def get_service() -> DemoService:
 
 app = FastAPI(title="AppealOS Runtime", version="0.1.0-rescue")
 
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
 
 @app.get("/")
-def root() -> Dict[str, str]:
-    return {"service": "appealos", "status": "ok", "model": "gemini-3.5-flash"}
+def root() -> FileResponse:
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
 @app.get("/health")
@@ -459,6 +474,14 @@ def demo_run() -> Dict[str, Any]:
 @app.get("/demo/case")
 def demo_case() -> Dict[str, Any]:
     return get_service().require_case().to_dict()
+
+
+@app.get("/demo/case/{case_id}")
+def demo_case_by_id(case_id: str) -> Dict[str, Any]:
+    case = get_service().store.get(case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail=f"Case {case_id} was not found")
+    return case.to_dict()
 
 
 @app.get("/demo/evidence")

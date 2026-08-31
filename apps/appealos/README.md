@@ -12,6 +12,7 @@ Deterministic domain code owns every state transition, mandate guard, idempotenc
 - Deterministic notice validation, citation validation, mandate scope, supplement cycle guard, and direct account-state verification.
 - Typed HTTP adapter for the deployed/local MockDrop service.
 - JSON stdout logs recording every Gemini/ADK call and MockDrop HTTP request.
+- A clickable single-page case workspace UI at `/` with a status timeline, consent/mandate controls, evidence cards, and outcome export.
 
 ## Run locally
 
@@ -31,7 +32,7 @@ export MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-Then run the full binding demo:
+Then open the case workspace at http://localhost:8080/ or run the full binding demo:
 
 ```bash
 curl -X POST http://localhost:8080/demo/run -H 'content-type: application/json'
@@ -43,6 +44,7 @@ Expected final state: `ACCOUNT_ACTIVE`.
 
 | Method | Path | Purpose |
 |---|---|---|
+| `GET` | `/` | Single-page case workspace UI |
 | `GET` | `/health`, `/healthz` | Health check |
 | `POST` | `/demo/reset` | Reset synthetic rider and case |
 | `POST` | `/demo/notice` | ADK/Gemini notice extraction |

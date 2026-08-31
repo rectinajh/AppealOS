@@ -15,6 +15,7 @@
 | 一句话简介 (中文) | 一个用户拥有的算法申诉工作流运行时：一次授权后，代理完成提交、补证、追踪与账户状态核验。 | ✅ 留档 |
 | Primary track | `The Taskmaster` | ✅ 直接使用 |
 | Repository | https://github.com/rectinajh/AppealOS | ✅ 已回填 |
+| Live case workspace | https://appealos-606769518273.us-central1.run.app | ✅ 已回填 |
 | Demo video URL | `[DEMO_VIDEO_URL]`（YouTube/Vimeo/Drive 外链，提交前由用户上传后回填） | ⚠️ 待回填 |
 
 ---
@@ -55,7 +56,7 @@ AppealOS separates internal analysis from external action. `AnalysisConsent` all
 
 **Status and honesty**
 
-The rescue slice is live on Google Cloud: MockDrop provides a Node.js HTTP API with deterministic appeal/account transitions, stable request and response hashes, idempotent replay, receipt recovery, and seven passing integration tests; the AppealOS FastAPI service runs a real Google ADK root agent over `gemini-3.5-flash` and completes `reset → notice → consent → mandate → submit → supplement → verify ACTIVE` against the deployed MockDrop. Firestore persistence, Pub/Sub connection, the Evidence Vault, and the UI are explicitly **planned**. Nothing in this submission claims a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration.
+The rescue slice is live on Google Cloud: MockDrop provides a Node.js HTTP API with deterministic appeal/account transitions, stable request and response hashes, idempotent replay, receipt recovery, and seven passing integration tests; the AppealOS FastAPI service runs a real Google ADK root agent over `gemini-3.5-flash` and completes `reset → notice → consent → mandate → submit → supplement → verify ACTIVE` against the deployed MockDrop. Firestore persistence, Pub/Sub connection, and the Evidence Vault are explicitly **planned**. A clickable single-page case workspace UI is live at https://appealos-606769518273.us-central1.run.app (alias https://appealos-agrdlgr4ea-uc.a.run.app). Nothing in this submission claims a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration.
 
 ### 1.4 Features and functionality
 
@@ -76,13 +77,13 @@ The rescue slice is live on Google Cloud: MockDrop provides a Node.js HTTP API w
 
 - **Gemini 3.5+** (`gemini-3.5-flash`, Vertex AI `global` endpoint): structured notice extraction, evidence relevance, policy-to-fact matching, response classification, and grounded drafting. The model interprets; it does not authorize actions or write case state.
 - **Google ADK**: root agent, typed tools, before-tool authorization callbacks, and after-tool receipt capture.
-- **Cloud Run**: two deployed rescue services — `appealos` (https://appealos-agrdlgr4ea-uc.a.run.app) and `mockdrop` (https://mockdrop-agrdlgr4ea-uc.a.run.app) — each with separate service identities. The compiled UI is planned.
+- **Cloud Run**: two deployed rescue services — `appealos` (https://appealos-agrdlgr4ea-uc.a.run.app) and `mockdrop` (https://mockdrop-agrdlgr4ea-uc.a.run.app) — each with separate service identities. A clickable single-page case workspace UI is live at the AppealOS URL.
 - **Firestore**: durable workflow authority for the case, mandate, receipts, and event history (planned for cloud).
 - **Cloud Storage + Secret Manager**: encrypted synthetic evidence and demo key storage (planned for cloud).
 - **Cloud Pub/Sub**: `mockdrop-platform-events` for the P0 supplement/decision event path (planned).
 - **Cloud Logging**: redacted metadata and structured logs without raw evidence or secrets.
 - **Node.js**: implemented local MockDrop API and integration tests.
-- **Python FastAPI + React**: FastAPI/ADK service implemented; React UI planned.
+- **Python FastAPI + static HTML/JS**: FastAPI/ADK service and a single-page case workspace UI (status timeline, consent/mandate controls, evidence cards, outcome export) are implemented; a compiled React UI is not claimed.
 - **MockDrop**: a synthetic simulation platform, not a real integration or independent adjudicator.
 
 ### 1.6 Other data sources used
@@ -143,7 +144,7 @@ AppealOS 把内部分析与外部行动分离。`AnalysisConsent` 只能处理�
 
 **状态与诚实声明**
 
-救援切片已在 Google Cloud 跑通：MockDrop 提供 Node.js HTTP API，包含确定性申诉/账户状态流转、稳定请求与响应哈希、幂等重放、回执恢复，以及 7 个通过的集成测试；AppealOS FastAPI 服务通过 Google ADK 根代理与 `gemini-3.5-flash` 完成 `reset → notice → consent → mandate → submit → supplement → verify ACTIVE`，并调用已部署的 MockDrop。Firestore 持久化、Pub/Sub 连接、Evidence Vault 与 UI 明确标记为 **planned**。本提交不声称存在 DoorDash、Uber、TikTok、Amazon、GitHub 或任何真实平台集成。
+救援切片已在 Google Cloud 跑通：MockDrop 提供 Node.js HTTP API，包含确定性申诉/账户状态流转、稳定请求与响应哈希、幂等重放、回执恢复，以及 7 个通过的集成测试；AppealOS FastAPI 服务通过 Google ADK 根代理与 `gemini-3.5-flash` 完成 `reset → notice → consent → mandate → submit → supplement → verify ACTIVE`，并调用已部署的 MockDrop。Firestore 持久化、Pub/Sub 连接与 Evidence Vault 明确标记为 **planned**；可点击的单页 case workspace UI 已在 AppealOS 地址上线。本提交不声称存在 DoorDash、Uber、TikTok、Amazon、GitHub 或任何真实平台集成。
 
 ### 2.4 功能与能力
 
@@ -164,13 +165,13 @@ AppealOS 把内部分析与外部行动分离。`AnalysisConsent` 只能处理�
 
 - **Gemini 3.5+**（`gemini-3.5-flash`，Vertex AI `global` endpoint）：结构化通知抽取、证据相关性、政策与事实匹配、回复分类与有依据的起草。模型只解释，不授权动作或写案件状态。
 - **Google ADK**：根代理、类型化工具、工具调用前授权回调、工具调用后回执捕获。
-- **Cloud Run**：两个已部署救援服务——`appealos`（https://appealos-agrdlgr4ea-uc.a.run.app）与 `mockdrop`（https://mockdrop-agrdlgr4ea-uc.a.run.app），各自使用独立服务身份；编译后 UI 仍为 planned。
+- **Cloud Run**：两个已部署救援服务——`appealos`（https://appealos-agrdlgr4ea-uc.a.run.app）与 `mockdrop`（https://mockdrop-agrdlgr4ea-uc.a.run.app），各自使用独立服务身份；可点击的单页 case workspace UI 已在 AppealOS 地址上线。
 - **Firestore**：案件、授权、回执与事件历史的持久工作流权威（cloud 阶段 planned）。
 - **Cloud Storage + Secret Manager**：加密合成证据与演示密钥存储（cloud 阶段 planned）。
 - **Cloud Pub/Sub**：P0 补证/决策事件路径的 `mockdrop-platform-events`（planned）。
 - **Cloud Logging**：脱敏元数据与结构化日志，不含原始证据或密钥。
 - **Node.js**：已实现的本地 MockDrop API 与集成测试。
-- **Python FastAPI + React**：FastAPI/ADK 服务已实现；React UI 仍为 planned。
+- **Python FastAPI + 静态 HTML/JS**：FastAPI/ADK 服务与单页 case workspace UI（状态时间线、consent/mandate 控制、evidence 卡、outcome 导出）已实现；未声称编译型 React UI。
 - **MockDrop**：合成模拟平台，不是真实集成，也不是独立裁决者。
 
 ### 2.6 使用的其他数据源
@@ -216,6 +217,7 @@ AppealOS 只使用合成 fixture 与公开参考资料，不摄取真实用户�
 | `[REPOSITORY_URL]` | 用户/工程师 | 已回填：https://github.com/rectinajh/AppealOS |
 | `[DEMO_VIDEO_URL]` | 用户/设计师 | `SUBMISSION.md` §0、§1.5 |
 | `[DEPLOYED_APPEALOS_URL]` | 工程师 | 已回填：https://appealos-agrdlgr4ea-uc.a.run.app |
+| hosted Project URL | 工程师 | 已回填：https://appealos-606769518273.us-central1.run.app |
 | `[DEPLOYED_MOCKDROP_URL]` | 工程师 | 已回填：https://mockdrop-agrdlgr4ea-uc.a.run.app |
 | `[GEMINI_MODEL_ID]` + endpoint/region | 工程师 | 已回填：`gemini-3.5-flash` / Vertex AI `global` |
 | `[ADK_VERSION]` | 工程师 | 已回填：`google-adk==2.8.0` |

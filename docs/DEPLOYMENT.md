@@ -2,6 +2,8 @@
 
 Issue: CMP-16 — MockDrop + AppealOS ADK rescue runtime deployed to Google Cloud.
 
+Follow-up: CMP-21 — Firestore persistence implemented and verified; Pub/Sub supplement delivery implemented behind flags, not yet deployed.
+
 ## Live origins
 
 | Service | Cloud Run URL | Region | Project |
@@ -10,6 +12,8 @@ Issue: CMP-16 — MockDrop + AppealOS ADK rescue runtime deployed to Google Clou
 | AppealOS | https://appealos-agrdlgr4ea-uc.a.run.app | us-central1 | boxwood-scope-364905 |
 
 Project number: `606769518273`. Both services are `generation 1`, serving 100% of traffic.
+
+Latest AppealOS revision: `appealos-00002-jzl` (2026-08-31). It serves the clickable single-page case workspace UI at `/` on both the alias URL above and the canonical Cloud Run URL `https://appealos-606769518273.us-central1.run.app`.
 
 ## Eligible model and framework
 
@@ -51,7 +55,7 @@ gcloud run deploy appealos \
   --min-instances 0 --max-instances 1 \
   --no-cpu-throttling \
   --timeout 300 \
-  --set-env-vars=MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app,GOOGLE_CLOUD_PROJECT=boxwood-scope-364905,GOOGLE_CLOUD_LOCATION=global
+  --set-env-vars=MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app,GOOGLE_CLOUD_PROJECT=boxwood-scope-364905,GOOGLE_CLOUD_LOCATION=global,APPEALOS_STORE_BACKEND=firestore
 ```
 
 ## Verified end-to-end result
@@ -115,11 +119,41 @@ The AppealOS Cloud Run logs include, per demo run:
 {"timestamp":"2026-08-31T18:33:18Z","level":"INFO","logger":"google_adk.google.adk.models.google_llm","message":"Response received from the model."}
 ```
 
+## Firestore persistence (CMP-21)
+
+AppealOS now has a durable case store in `apps/appealos/app/store.py`. With `APPEALOS_STORE_BACKEND=firestore` the runtime persists one `cases/{caseId}` document and an ordered `cases/{caseId}/events/{eventId}` subcollection; the in-memory store remains the local default.
+
+Firestore layout:
+
+```text
+cases/{caseId}                                  case, consent, mandate, claims, receipts
+cases/{caseId}/events/{eventId}                 ordered timeline events
+processed_platform_events/{externalEventId}     Pub/Sub consumer dedupe
+```
+
+Verification performed on `boxwood-scope-364905` using a temporary collection:
+
+- `DemoCase → to_persistable → save → get → from_persistable` round trip preserved mandate, receipts, and timeline order.
+- `mark_external_event_processed` created the dedupe record once and rejected the duplicate.
+- The verification documents were deleted afterwards; no demo data was left behind.
+
+Deploy with:
+
+```bash
+gcloud run services update appealos   --project boxwood-scope-364905   --region us-central1   --set-env-vars=APPEALOS_STORE_BACKEND=firestore,GOOGLE_CLOUD_PROJECT=boxwood-scope-364905
+```
+
+## Pub/Sub supplement delivery (CMP-21)
+
+MockDrop publishes `SUPPLEMENT_REQUESTED` and decision events through `apps/mockdrop/src/pubsub.js` when `MOCKDROP_PUBSUB_ENABLED=true` and `MOCKDROP_PUBSUB_TOPIC` is set. AppealOS exposes `POST /events/pubsub` in `apps/appealos/app/pubsub.py` and `apps/appealos/app/main.py`; it decodes the push message, deduplicates on `externalEventId`, reloads the case from Firestore, submits the allowed supplement, then verifies `ACTIVE` with a direct `GET /v1/accounts`.
+
+Status: code complete and covered by local unit tests; not yet deployed to Cloud Run and not yet wired to the live `mockdrop-platform-events` topic. OIDC push verification is optional via `PUBSUB_VERIFY_OIDC=true` + `PUBSUB_AUDIENCE`; it remains planned for the deployed revision.
+
 ## Not implemented / planned
 
-- Firestore persistence for both services (both currently use in-memory demo state).
-- Pub/Sub event publication and OIDC service-to-service enforcement.
+- Deployed Firestore persistence for MockDrop (its API still uses the in-memory store; AppealOS Firestore is implemented and verified).
+- Deployed Pub/Sub delivery and OIDC service-to-service enforcement.
 - Encrypted Evidence Vault, Cloud Storage, Secret Manager, Cloud Scheduler reconciler.
 - Real-platform adapters; the public MVP is synthetic MockDrop data only.
 
-Do not cite these planned components as implemented in Devpost.
+Do not cite deployed Pub/Sub/OIDC or MockDrop Firestore as implemented in Devpost.

@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AppealOS · Case Workspace</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --ink: #17233d;
+      --muted: #66738f;
+      --line: #e4e9f2;
+      --accent: #3b5bff;
+      --accent-soft: #eef1ff;
+      --ok: #0f9f6e;
+      --ok-soft: #e6f7f0;
+      --warn: #b7791f;
+      --warn-soft: #fff5e5;
+      --danger: #d64545;
+      --danger-soft: #fdecec;
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(23, 35, 61, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 16px 24px;
+      background: rgba(245, 247, 251, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    header .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .state-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid #d9e0ff;
+      border-radius: 999px;
+      padding: 7px 12px;
+      white-space: nowrap;
+    }
+
+    .state-pill.ok { color: var(--ok); background: var(--ok-soft); border-color: #cdeee0; }
+    .state-pill.warn { color: var(--warn); background: var(--warn-soft); border-color: #f6e2bd; }
+    .state-pill.danger { color: var(--danger); background: var(--danger-soft); border-color: #f4d2d2; }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    section h2 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stack { display: grid; gap: 14px; }
+
+    .grid-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: #c7d2f7;
+      background: #fbfcff;
+      transform: translateY(-1px);
+    }
+
+    button:active:not(:disabled) { transform: translateY(0); }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover:not(:disabled) { background: #2f4ee6; border-color: #2f4ee6; }
+
+    button.ghost { background: transparent; border-color: transparent; color: var(--accent); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: #fbfcff;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .metric .label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .metric .value {
+      font-weight: 750;
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .timeline {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+      max-height: 420px;
+      overflow: auto;
+    }
+
+    .timeline li {
+      position: relative;
+      padding: 10px 12px 10px 30px;
+      background: #fbfcff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 15px;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .timeline li.user::before { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }
+    .timeline li.platform::before { background: var(--warn); box-shadow: 0 0 0 4px var(--warn-soft); }
+
+    .event-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .event-type {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .event-state {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .event-meta {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+    }
+
+    .evidence-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .evidence-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fbfcff;
+    }
+
+    .evidence-card label {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .evidence-card input { margin-top: 2px; }
+
+    .evidence-title {
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 3px 7px;
+    }
+
+    .evidence-meta {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 5px;
+      display: grid;
+      gap: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    .policy {
+      margin-top: 14px;
+      border-top: 1px dashed var(--line);
+      padding-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .policy code {
+      display: block;
+      margin-top: 5px;
+      color: var(--ink);
+      background: #f5f7fb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      white-space: pre-wrap;
+    }
+
+    .log {
+      background: #111a2e;
+      color: #e6edf7;
+      border-radius: 12px;
+      padding: 12px;
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      min-height: 72px;
+      max-height: 300px;
+      overflow: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+      max-width: min(520px, calc(100vw - 32px));
+    }
+
+    .toast.show { opacity: 1; }
+    .toast.error { background: var(--danger); }
+
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 22px 8px;
+    }
+
+    .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; padding: 16px; }
+      .metrics { grid-template-columns: 1fr; }
+      header { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>AppealOS · Case Workspace</h1>
+      <div class="subtitle">User-owned appeal workflow runtime — live demo controls</div>
+    </div>
+    <div>
+      <span id="state-pill" class="state-pill">— no case —</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="stack">
+      <section>
+        <h2>Case controls</h2>
+        <div class="grid-controls">
+          <button id="btn-reset" data-action="reset">1 · Reset</button>
+          <button id="btn-notice" data-action="notice" disabled>2 · Parse notice</button>
+          <button id="btn-consent" data-action="consent" disabled>3 · Grant consent</button>
+          <button id="btn-mandate" data-action="mandate" disabled>4 · Approve mandate</button>
+          <button id="btn-submit" data-action="submit" disabled>5 · Submit appeal</button>
+          <button id="btn-supplement" data-action="supplement" disabled>6 · Send supplement</button>
+          <button id="btn-verify" data-action="verify" disabled>7 · Verify account</button>
+          <button id="btn-run" class="primary" data-action="run">Run full flow</button>
+        </div>
+        <div class="inline-actions">
+          <button id="btn-case" class="ghost" data-action="case">Refresh case</button>
+          <button id="btn-export" class="ghost" data-action="export" disabled>Export outcome JSON</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Case summary</h2>
+        <div class="metrics">
+          <div class="metric"><span class="label">State</span><span id="m-state" class="value">—</span></div>
+          <div class="metric"><span class="label">Case ID</span><span id="m-case" class="value">—</span></div>
+          <div class="metric"><span class="label">Account</span><span id="m-account" class="value">—</span></div>
+          <div class="metric"><span class="label">Appeal</span><span id="m-appeal" class="value">—</span></div>
+          <div class="metric"><span class="label">Version</span><span id="m-version" class="value">—</span></div>
+          <div class="metric"><span class="label">Deadline</span><span id="m-deadline" class="value">—</span></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Status timeline</h2>
+        <ol id="timeline" class="timeline">
+          <li class="empty">Reset the case to begin the appeal workflow.</li>
+        </ol>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section>
+        <h2>Evidence</h2>
+        <div id="evidence" class="evidence-list">
+          <div class="empty">Loading evidence inventory…</div>
+        </div>
+        <div class="policy" id="policy"></div>
+      </section>
+
+      <section>
+        <h2>Live log</h2>
+        <div id="log" class="log">Ready.</div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const statePill = document.getElementById("state-pill");
+    const timeline = document.getElementById("timeline");
+    const evidenceEl = document.getElementById("evidence");
+    const policyEl = document.getElementById("policy");
+    const logEl = document.getElementById("log");
+    const toastEl = document.getElementById("toast");
+    const stateMetric = document.getElementById("m-state");
+    const caseMetric = document.getElementById("m-case");
+    const accountMetric = document.getElementById("m-account");
+    const appealMetric = document.getElementById("m-appeal");
+    const versionMetric = document.getElementById("m-version");
+    const deadlineMetric = document.getElementById("m-deadline");
+
+    const buttons = {
+      reset: document.getElementById("btn-reset"),
+      notice: document.getElementById("btn-notice"),
+      consent: document.getElementById("btn-consent"),
+      mandate: document.getElementById("btn-mandate"),
+      submit: document.getElementById("btn-submit"),
+      supplement: document.getElementById("btn-supplement"),
+      verify: document.getElementById("btn-verify"),
+      run: document.getElementById("btn-run"),
+      case: document.getElementById("btn-case"),
+      export: document.getElementById("btn-export"),
+    };
+
+    let currentCase = null;
+    let evidence = null;
+    let toastTimer = null;
+
+    const stateOrder = [
+      "NOTICE_RECEIVED",
+      "PARSED",
+      "CONSENTED",
+      "MANDATE_APPROVED",
+      "ACKNOWLEDGED",
+      "SUPPLEMENT_REQUESTED",
+      "SUPPLEMENTED",
+      "DECIDED_APPROVED",
+      "ACCOUNT_ACTIVE",
+    ];
+
+    function toast(message, isError = false) {
+      toastEl.textContent = message;
+      toastEl.classList.toggle("error", isError);
+      toastEl.classList.add("show");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toastEl.classList.remove("show"), 3600);
+    }
+
+    function log(message, isError = false) {
+      const time = new Date().toLocaleTimeString([], { hour12: false });
+      logEl.textContent += "\n" + `[${time}] ` + message;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { "content-type": "application/json", ...(options.headers || {}) },
+        ...options,
+      });
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = null;
+      }
+      if (!response.ok) {
+        const detail = data && data.detail ? data.detail : (response.status + " " + response.statusText);
+        const err = new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+        err.status = response.status;
+        err.data = data;
+        throw err;
+      }
+      return data;
+    }
+
+    function applyCase(data) {
+      if (!data || !data.case) return;
+      currentCase = data.case;
+      renderCase();
+      log("case updated → " + currentCase.state + " (v" + currentCase.version + ")");
+    }
+
+    function stateClass(state) {
+      if (!state) return "";
+      if (state === "ACCOUNT_ACTIVE" || state === "DECIDED_APPROVED") return "ok";
+      if (state === "SUPPLEMENT_REQUESTED" || state === "ACKNOWLEDGED") return "warn";
+      if (state.includes("REJECTED")) return "danger";
+      return "";
+    }
+
+    function renderCase() {
+      const c = currentCase;
+      stateMetric.textContent = c.state || "—";
+      caseMetric.textContent = c.caseId || "—";
+      accountMetric.textContent = c.accountId || "—";
+      appealMetric.textContent = c.appealId || "—";
+      versionMetric.textContent = c.version != null ? String(c.version) : "—";
+      deadlineMetric.textContent = c.deadlineAt || "—";
+
+      statePill.textContent = c.state || "no case";
+      statePill.className = "state-pill " + stateClass(c.state);
+
+      buttons.export.disabled = !currentCase;
+      updateButtons();
+
+      if (!c.timeline || c.timeline.length === 0) {
+        timeline.innerHTML = '<li class="empty">No timeline events yet.</li>';
+        return;
+      }
+
+      timeline.innerHTML = c.timeline.map((event) => {
+        const cls = event.actor === "USER" ? "user" : (event.actor === "PLATFORM" ? "platform" : "");
+        const data = event.data && Object.keys(event.data).length ? JSON.stringify(event.data) : "";
+        return `
+          <li class="${cls}">
+            <div class="event-head">
+              <span class="event-type">${escapeHtml(event.type)}</span>
+              <span class="event-state">${escapeHtml(event.state || "")} · ${escapeHtml(event.actor || "")}</span>
+            </div>
+            <div class="event-meta">${escapeHtml(formatDate(event.createdAt))}${data ? " · " + escapeHtml(data) : ""}</div>
+          </li>`;
+      }).join("");
+      timeline.scrollTop = timeline.scrollHeight;
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return isNaN(date) ? value : date.toLocaleString([], { hour12: false });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[ch]));
+    }
+
+    function updateButtons() {
+      const state = currentCase ? currentCase.state : null;
+      const idx = state ? stateOrder.indexOf(state) : -1;
+      buttons.reset.disabled = false;
+      buttons.notice.disabled = idx !== 0;
+      buttons.consent.disabled = idx !== 1;
+      buttons.mandate.disabled = idx !== 2;
+      buttons.submit.disabled = idx !== 3;
+      buttons.supplement.disabled = idx !== 5;
+      buttons.verify.disabled = idx !== 7;
+      buttons.export.disabled = !currentCase;
+    }
+
+    async function refreshCase() {
+      try {
+        const data = await api("/demo/case");
+        currentCase = data;
+        renderCase();
+        log("case refreshed");
+      } catch (err) {
+        if (err.status === 409) {
+          currentCase = null;
+          stateMetric.textContent = "—";
+          caseMetric.textContent = "—";
+          accountMetric.textContent = "—";
+          appealMetric.textContent = "—";
+          versionMetric.textContent = "—";
+          deadlineMetric.textContent = "—";
+          statePill.textContent = "no case";
+          statePill.className = "state-pill";
+          timeline.innerHTML = '<li class="empty">Reset the case to begin the appeal workflow.</li>';
+          updateButtons();
+          log("no active case yet; click Reset", true);
+          return;
+        }
+        log("refresh failed: " + err.message, true);
+        toast(err.message, true);
+      }
+    }
+
+    async function runAction(action) {
+      const busy = {};
+      Object.values(buttons).forEach((btn) => { busy[btn.id] = btn.disabled; btn.disabled = true; });
+      try {
+        if (action === "reset") {
+          const data = await api("/demo/reset", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Case reset complete");
+        } else if (action === "notice") {
+          const data = await api("/demo/notice", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Notice parsed");
+        } else if (action === "consent") {
+          const artifactIds = selectedArtifactIds();
+          const data = await api("/demo/consent", { method: "POST", body: JSON.stringify({ artifact_ids: artifactIds }) });
+          applyCase(data);
+          toast("Consent granted");
+        } else if (action === "mandate") {
+          const data = await api("/demo/mandate", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Mandate approved");
+        } else if (action === "submit") {
+          const data = await api("/demo/submit", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Appeal submitted");
+        } else if (action === "supplement") {
+          const data = await api("/demo/supplement", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Supplement sent");
+        } else if (action === "verify") {
+          const data = await api("/demo/verify", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Account verified ACTIVE");
+        } else if (action === "run") {
+          const data = await api("/demo/run", { method: "POST", body: "{}" });
+          currentCase = data.case;
+          renderCase();
+          log("full flow complete → " + data.final_state);
+          toast("Full flow complete: " + data.final_state);
+        } else if (action === "case") {
+          await refreshCase();
+          return;
+        } else if (action === "export") {
+          await exportCase();
+          return;
+        }
+      } catch (err) {
+        log(action + " failed: " + err.message, true);
+        toast(err.message, true);
+      } finally {
+        updateButtons();
+      }
+    }
+
+    function selectedArtifactIds() {
+      const boxes = [...evidenceEl.querySelectorAll('input[type="checkbox"]:checked')];
+      if (boxes.length === 0) return null;
+      return boxes.map((box) => box.value);
+    }
+
+    async function exportCase() {
+      try {
+        const data = await api("/demo/case");
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "appealos-case-" + (data.caseId || "export") + ".json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast("Outcome exported");
+      } catch (err) {
+        toast(err.message, true);
+      }
+    }
+
+    function renderEvidence(data) {
+      evidence = data;
+      if (!Array.isArray(data.evidence_inventory)) {
+        evidenceEl.innerHTML = '<div class="empty">No evidence inventory available.</div>';
+      } else {
+        evidenceEl.innerHTML = data.evidence_inventory.map((item) => `
+          <div class="evidence-card">
+            <label>
+              <input type="checkbox" value="${escapeHtml(item.artifactId)}" checked />
+              <div>
+                <div class="evidence-title">
+                  <span>${escapeHtml(item.artifactId)}</span>
+                  <span class="badge">${escapeHtml(item.kind || "")}</span>
+                </div>
+                <div class="evidence-meta">
+                  <span>capturedAt ${escapeHtml(formatDate(item.capturedAt))}</span>
+                  <span>sha256 ${escapeHtml(item.plaintextSha256 || "")}</span>
+                </div>
+              </div>
+            </label>
+          </div>`).join("");
+      }
+
+      const clauses = data.policy_profile && data.policy_profile.clauses;
+      policyEl.innerHTML = clauses
+        ? "<strong>Policy profile</strong>" + Object.entries(clauses).map(([id, text]) => `<code>${escapeHtml(id)} — ${escapeHtml(text)}</code>`).join("")
+        : "";
+    }
+
+    async function loadEvidence() {
+      try {
+        const data = await api("/demo/evidence");
+        renderEvidence(data);
+        log("evidence inventory loaded (" + data.evidence_inventory.length + " artifacts)");
+      } catch (err) {
+        evidenceEl.innerHTML = '<div class="empty">Could not load evidence.</div>';
+        log("evidence load failed: " + err.message, true);
+      }
+    }
+
+    document.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-action]");
+      if (btn) runAction(btn.dataset.action);
+    });
+
+    refreshCase();
+    loadEvidence();
+  </script>
+</body>
+</html>

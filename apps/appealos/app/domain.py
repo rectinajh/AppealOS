@@ -10,7 +10,7 @@ import datetime as _dt
 import hashlib
 import json
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 
 RIDER_ACCOUNT_ID = "rider-r-2048"
@@ -299,3 +299,35 @@ class DemoCase:
             "updatedAt": self.updatedAt,
             "timeline": self.timeline,
         }
+
+    def to_persistable(self) -> Dict[str, Any]:
+        """Full round-trip representation used by durable stores."""
+        data = self.to_dict()
+        data["consent"] = asdict(self.consent) if self.consent else None
+        data["mandate"] = asdict(self.mandate) if self.mandate else None
+        return data
+
+    @classmethod
+    def from_persistable(cls, data: Dict[str, Any]) -> "DemoCase":
+        """Reconstruct a case from a durable-store payload."""
+        consent_data = data.get("consent")
+        mandate_data = data.get("mandate")
+        return cls(
+            caseId=data["caseId"],
+            ownerId=data.get("ownerId", "synthetic-owner"),
+            platform=data.get("platform", PLATFORM),
+            accountId=data.get("accountId", RIDER_ACCOUNT_ID),
+            allegationType=data.get("allegationType", ALLEGATION_TYPE),
+            state=data.get("state", "NOTICE_RECEIVED"),
+            deadlineAt=data.get("deadlineAt", DETERMINISTIC_DEADLINE),
+            deadlineSourceText=data.get("deadlineSourceText", SYNTHETIC_NOTICE),
+            consent=AnalysisConsent(**consent_data) if consent_data else None,
+            mandate=AppealMandate(**mandate_data) if mandate_data else None,
+            claims=data.get("claims") or [],
+            appealId=data.get("appealId"),
+            platformReceipts=data.get("platformReceipts") or [],
+            timeline=data.get("timeline") or [],
+            version=data.get("version", 0),
+            createdAt=data.get("createdAt", ""),
+            updatedAt=data.get("updatedAt", ""),
+        )

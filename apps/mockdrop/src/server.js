@@ -1,6 +1,7 @@
 import http from "node:http";
 
 import { MockDropError, MockDropStore } from "./mockdrop-store.js";
+import { createPlatformEventPublisher } from "./pubsub.js";
 
 const MAX_BODY_BYTES = 1_000_000;
 
@@ -53,7 +54,8 @@ function idempotencyKey(request) {
 export function createMockDropServer({
   store = new MockDropStore(),
   apiToken = process.env.MOCKDROP_API_TOKEN,
-  logger = console
+  logger = console,
+  publisher = createPlatformEventPublisher()
 } = {}) {
   const server = http.createServer(async (request, response) => {
     const requestUrl = new URL(request.url, "http://localhost");
@@ -76,7 +78,9 @@ export function createMockDropServer({
       if (request.method === "POST" && requestUrl.pathname === "/v1/appeals") {
         authorizeWrite(request, apiToken);
         const body = await readJson(request);
-        return json(response, 202, store.submitAppeal(body, idempotencyKey(request)));
+        const result = store.submitAppeal(body, idempotencyKey(request));
+        await publisher.publish(result.outboundEvent);
+        return json(response, 202, result);
       }
 
       const actionMatch = requestUrl.pathname.match(/^\/v1\/actions\/by-idempotency\/([^/]+)$/);
@@ -94,15 +98,13 @@ export function createMockDropServer({
       if (request.method === "POST" && supplementMatch) {
         authorizeWrite(request, apiToken);
         const body = await readJson(request);
-        return json(
-          response,
-          200,
-          store.submitSupplement(
-            decodeURIComponent(supplementMatch[1]),
-            body,
-            idempotencyKey(request)
-          )
+        const result = store.submitSupplement(
+          decodeURIComponent(supplementMatch[1]),
+          body,
+          idempotencyKey(request)
         );
+        await publisher.publish(result.outboundEvent);
+        return json(response, 200, result);
       }
 
       const appealMatch = requestUrl.pathname.match(/^\/v1\/appeals\/([^/]+)$/);

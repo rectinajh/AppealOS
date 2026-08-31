@@ -1,5 +1,7 @@
 # AppealOS Runtime
 
+[![CI](https://github.com/rectinajh/AppealOS/actions/workflows/ci.yml/badge.svg)](https://github.com/rectinajh/AppealOS/actions/workflows/ci.yml)
+
 > Platforms already use algorithms to judge us. Ordinary people need a tireless digital advocate of their own.
 
 **AppealOS is a user-owned appeal workflow runtime for an algorithmic world.** It turns a platform suspension notice, user-directed evidence, policy rules, deadlines, and scoped authorization into an executable `AppealCase`. After one bounded approval, the Agent submits the appeal, handles one authorized evidence request, tracks the response, and verifies the final account state.
@@ -8,7 +10,7 @@
 
 ## Project status
 
-**Rescue slice live on Google Cloud.** MockDrop and the AppealOS ADK rescue runtime are both deployed to Cloud Run and verified end-to-end. The demo reaches `ACCOUNT_ACTIVE` through the required `reset → notice → consent → mandate → submit → supplement → verify` path. Firestore persistence, Pub/Sub event delivery, the Evidence Vault, and the UI remain planned.
+**Rescue slice live on Google Cloud.** MockDrop and the AppealOS ADK rescue runtime are both deployed to Cloud Run and verified end-to-end. The demo reaches `ACCOUNT_ACTIVE` through the required `reset → notice → consent → mandate → submit → supplement → verify` path. Firestore persistence for the case, mandate, receipts, and event history is implemented and verified against the live project (`APPEALOS_STORE_BACKEND=firestore`); Pub/Sub platform-event delivery is implemented behind `MOCKDROP_PUBSUB_ENABLED`/`PUBSUB_VERIFY_OIDC` flags but not yet deployed, and the Evidence Vault remains planned. A clickable single-page case workspace UI is live at https://appealos-606769518273.us-central1.run.app.
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
@@ -65,6 +67,7 @@ MockDrop currently provides:
 - conflict detection when one idempotency key is reused with a different body;
 - valid-device-log and rejected-evidence paths;
 - an optional local bearer-token guard for write routes;
+- an env-gated Pub/Sub publisher for `SUPPLEMENT_REQUESTED` and decision events (`MOCKDROP_PUBSUB_ENABLED=true`);
 - seven HTTP integration tests using Node's built-in test runner.
 
 AppealOS currently provides:
@@ -72,6 +75,8 @@ AppealOS currently provides:
 - a FastAPI service with a real Google ADK root agent (`appeal_runtime_agent`, `google-adk==2.8.0`);
 - real Vertex AI calls to `gemini-3.5-flash` at the `global` endpoint;
 - deterministic notice validation, citation validation, mandate scope, supplement-cycle guard, and direct account-state verification;
+- a durable case store with an in-memory fallback and a verified Firestore backend (`app/store.py`);
+- a Pub/Sub push endpoint `/events/pubsub` that consumes supplement events idempotently and still verifies `ACTIVE` directly;
 - a typed HTTP adapter to MockDrop;
 - a one-request `/demo/run` binding demo returning `ACCOUNT_ACTIVE`.
 
@@ -107,6 +112,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 export MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app
+# Durable storage: firestore uses GOOGLE_CLOUD_PROJECT; memory is the local default.
+export APPEALOS_STORE_BACKEND=firestore
+export GOOGLE_CLOUD_PROJECT=boxwood-scope-364905
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
@@ -163,7 +171,7 @@ flowchart LR
 
 Rendered architecture asset: [PNG](docs/assets/appealos-architecture.png) · [SVG](docs/assets/appealos-architecture.svg).
 
-The binding rescue build may implement only the MockDrop platform-events topic and the demonstrated supplement path. Deferred components must remain labeled as planned until verified in the deployed revision.
+The binding rescue build implements the MockDrop platform-events topic and the demonstrated supplement path in code. Pub/Sub OIDC enforcement and deployed end-to-end delivery remain labeled as planned until verified in a deployed revision.
 
 ## Gemini, ADK, and deterministic code
 
@@ -238,7 +246,7 @@ The GCP running-evidence segment now has live `.run.app` URLs, Cloud Run deploy 
 └── tests/              # proposed state, mandate, adapter, and security tests
 ```
 
-`apps/mockdrop` and `apps/appealos` exist today. Encrypted fixture packaging, Cloud persistence, Pub/Sub, and the compiled React UI remain implementation targets.
+`apps/mockdrop` and `apps/appealos` exist today. Firestore persistence and the Pub/Sub supplement path are implemented in code; encrypted fixture packaging and deployed Pub/Sub/OIDC remain implementation targets. The single-page case workspace UI is implemented in `apps/appealos/app/static/index.html`.
 
 ## Safety boundaries
 
