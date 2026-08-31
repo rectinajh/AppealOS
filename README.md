@@ -14,11 +14,28 @@
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
-## The problem
+## Background
 
-A delivery rider, seller, creator, or developer can lose an account, income, audience, or funds because of an automated fraud signal, identity failure, unexplained complaint, or moderation mistake. The person is then expected to reconstruct the allegation, evidence, policy, deadline, and follow-up process through a contextless form.
+More of our income, audience, and access now depends on platforms we do not control. Delivery riders, marketplace sellers, creators, and developers are routinely judged by automated systems: a fraud signal, an identity check, an unexplained complaint, or a moderation decision can suspend an account within minutes. The decision is automated, but the recovery process is not.
 
-The missing product is not a better appeal-letter generator. It is a persistent workflow that can:
+This asymmetry is already visible in public evidence:
+
+- The [Seattle App-Based Worker Deactivation Rights Ordinance](https://www.seattle.gov/laborstandards/ordinances/app-based-worker-ordinances/app-based-worker-deactivation-rights-ordinance) recognizes that algorithmic deactivation needs due process.
+- [Human Rights Watch documented in *The Gig Trap*](https://www.hrw.org/report/2025/05/12/the-gig-trap/algorithmic-wage-and-labor-exploitation-in-platform-work-in-the-us) how algorithmic wage and labor controls create real economic harm for platform workers.
+
+## Why AppealOS exists
+
+The problem is not just a bad form. It is a structural asymmetry: the platform owns the decision pipeline, the dashboards, the data, and the process, while the affected person gets a short notice and a contextless appeal box. The person is expected to reconstruct the allegation, gather evidence, learn the policy, meet the deadline, and follow up — often while their income is already gone.
+
+AppealOS exists to give ordinary people a durable, tireless digital advocate of their own: a user-owned workflow that remembers the case, stays within explicit permissions, keeps moving after approval, and only declares success after the external account state is directly verified.
+
+## The problem it solves
+
+A delivery rider, seller, creator, or developer can lose an account, income, audience, or funds because of an automated decision. The information needed to respond — the allegation, evidence, policy rules, deadlines, receipts, GPS traces, and device logs — is fragmented across email, help pages, and account history. The missing product is not a better appeal-letter generator; it is a persistent workflow that carries one case from notice to a verified outcome.
+
+## How it solves it
+
+AppealOS joins the suspension notice, user-directed evidence, policy rules, deadlines, and scoped authorization into an executable `AppealCase`. After one bounded approval, the Agent follows a persistent workflow that can:
 
 1. read the platform notice;
 2. identify the allegation and deadline;
