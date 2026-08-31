@@ -48,39 +48,39 @@ The hackathon scope is deliberately narrow and fully synthetic. A fictional deli
 
 **Why it is agentic**
 
-AppealOS is not organized around a chat box. Its value comes from durable state and external action: background execution after approval, ADK tools that read approved artifacts and write to MockDrop, Firestore as the durable workflow authority, a scoped `AppealMandate` that limits destination, evidence, actions, supplement count, and expiry, and distinct events for submission, acknowledgement, decision, and verified account state.
+AppealOS is not organized around a chat box. Its value comes from durable state and external action: one user-approved execution carries the case through submission, one authorized supplement, and direct verification; Firestore is the durable workflow authority; and `AppealMandate` limits destination, evidence, actions, supplement count, and expiry.
 
 **Safety model: models interpret, code authorizes**
 
-AppealOS separates internal analysis from external action. `AnalysisConsent` allows processing selected artifacts; it cannot disclose evidence or contact a platform. `AppealMandate` allows one named destination and evidence set; it cannot contact a new recipient, add a new claim, or disclose a new evidence class. Gemini proposes structured facts and tools, while deterministic code controls deadlines, permissions, transitions, idempotency, and writes. Revocation blocks actions that have not started dispatching.
+AppealOS separates internal analysis from external action. `AnalysisConsent` allows processing selected artifacts; it cannot disclose evidence or contact a platform. `AppealMandate` allows one named destination and evidence set; it cannot contact a new recipient, add a new claim, or disclose a new evidence class. Gemini proposes structured facts; deterministic code re-checks consent, expiry, destination, action, artifact, template, cycle count, transitions, idempotency, and writes at every boundary.
 
 **Status and honesty**
 
-The rescue slice is live on Google Cloud: MockDrop provides a Node.js HTTP API with deterministic appeal/account transitions, stable request and response hashes, idempotent replay, receipt recovery, and seven passing integration tests; the AppealOS FastAPI service runs a real Google ADK root agent over `gemini-3.5-flash` and completes `reset → notice → consent → mandate → submit → supplement → verify ACTIVE` against the deployed MockDrop. Firestore persistence, Pub/Sub connection, and the Evidence Vault are explicitly **planned**. A clickable single-page case workspace UI is live at https://appealos-606769518273.us-central1.run.app (alias https://appealos-agrdlgr4ea-uc.a.run.app). Nothing in this submission claims a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration.
+The rescue slice is live on Google Cloud: MockDrop provides a Node.js HTTP API with deterministic appeal/account transitions, stable request and response hashes, idempotent replay, receipt recovery, and seven passing integration tests; the AppealOS FastAPI service runs real Google ADK `LlmAgent` tasks over `gemini-3.5-flash` and uses Firestore for cases, mandates, receipts, and timelines. The repository adds case recovery, strict mandate enforcement, a hash-chained audit timeline, and a Pub/Sub push consumer. The deployed Pub/Sub topic/subscription/OIDC wiring and Evidence Vault are explicitly **planned**. A clickable single-page case workspace UI is live at https://appealos-606769518273.us-central1.run.app. Nothing in this submission claims a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration.
 
 ### 1.4 Features and functionality
 
 - **Structured notice intake**: parses only the allowlisted synthetic notice into allegation type, incident window, normalized deadline, and confidence; uncertain parses pause for user review.
 - **Two-level user consent**: `AnalysisConsent` for internal evidence processing; a separate scoped `AppealMandate` for external action.
-- **Encrypted Evidence Vault prototype**: three synthetic artifacts stored as AES-256-GCM ciphertext with plaintext/ciphertext hashes, nonce, and AAD; hash mismatch quarantines the artifact.
-- **Citation-backed timeline**: every drafted claim references an artifact ID, plaintext hash, and exact source span; causal and low-confidence claims require user confirmation.
+- **User-selected evidence scope**: exactly three synthetic fixtures expose IDs, capture times, kinds, and content hashes; an encrypted Vault is not claimed in the MVP.
+- **Grounded claims**: every validated claim references only user-selected artifact IDs and allowlisted policy clause IDs.
 - **Versioned policy profile**: appeal claims map to a frozen MockDrop policy profile with clause IDs.
 - **Bounded external action**: one initial appeal submission, one authorized supplement, polling, and direct account-state verification under a single mandate.
-- **Asynchronous supplement handling**: reacts to one Pub/Sub supplement event without another user prompt when it fits the mandate; replay does not produce a duplicate platform action.
+- **One approved execution**: after explicit consent and mandate approval, one call performs submit → authorized supplement → direct verification. A deduplicating Pub/Sub consumer implements the same supplement path in code; live event delivery remains planned.
 - **Receipt-before-celebration state machine**: distinguishes `SUBMITTED`, `ACKNOWLEDGED`, `DECIDED_APPROVED`, and directly verified `ACCOUNT_ACTIVE`.
 - **Action timeline**: records actor, time, correlation ID, case version, event hash, and receipt references without exposing raw evidence or tokens.
-- **Due Process Audit Export**: downloads a redacted, hash-consistent JSON case record for human escalation.
+- **Due Process Audit Export**: downloads a synthetic JSON case record whose event hash chain can be verified and detects local tampering.
 - **Deterministic safety guards**: model output cannot authorize actions or write case state; destination, method, path, evidence fields, byte limits, deadlines, and idempotency are enforced in code.
-- **Local verified slice today**: MockDrop reset/account/appeal/supplement/decision/receipt APIs with seven HTTP integration tests and an optional local bearer-token write guard.
+- **Verified test evidence**: 31 Python tests cover authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, health evidence, and tamper detection; seven Node HTTP tests cover MockDrop state, receipts, and idempotency.
 
 ### 1.5 Technologies used
 
 - **Gemini 3.5+** (`gemini-3.5-flash`, Vertex AI `global` endpoint): structured notice extraction, evidence relevance, policy-to-fact matching, response classification, and grounded drafting. The model interprets; it does not authorize actions or write case state.
-- **Google ADK**: root agent, typed tools, before-tool authorization callbacks, and after-tool receipt capture.
-- **Cloud Run**: two deployed rescue services — `appealos` (https://appealos-agrdlgr4ea-uc.a.run.app) and `mockdrop` (https://mockdrop-agrdlgr4ea-uc.a.run.app) — each with separate service identities. A clickable single-page case workspace UI is live at the AppealOS URL.
-- **Firestore**: durable workflow authority for the case, mandate, receipts, and event history (planned for cloud).
+- **Google ADK**: real `LlmAgent` runners with typed structured outputs for notice extraction, evidence relevance, and grounded claim drafting.
+- **Cloud Run**: two deployed rescue services — `appealos` (https://appealos-agrdlgr4ea-uc.a.run.app) and `mockdrop` (https://mockdrop-agrdlgr4ea-uc.a.run.app). The current deployment uses the project's default compute service identity; separate least-privilege identities are planned.
+- **Firestore**: implemented durable workflow authority for the case, mandate, receipts, event history, and external-event deduplication.
 - **Cloud Storage + Secret Manager**: encrypted synthetic evidence and demo key storage (planned for cloud).
-- **Cloud Pub/Sub**: `mockdrop-platform-events` for the P0 supplement/decision event path (planned).
+- **Cloud Pub/Sub**: env-gated publisher and idempotent push consumer implemented in code; deployed topic/subscription/OIDC delivery is planned.
 - **Cloud Logging**: redacted metadata and structured logs without raw evidence or secrets.
 - **Node.js**: implemented local MockDrop API and integration tests.
 - **Python FastAPI + static HTML/JS**: FastAPI/ADK service and a single-page case workspace UI (status timeline, consent/mandate controls, evidence cards, outcome export) are implemented; a compiled React UI is not claimed.
@@ -136,39 +136,39 @@ AppealOS 把平台停权通知、用户指定证据、政策规则、期限和�
 
 **为什么是代理**
 
-AppealOS 不围绕聊天框组织。其价值来自持久状态与外部行动：授权后的后台执行、读写 MockDrop 的 ADK 工具、作为持久工作流权威的 Firestore、限定目标/证据/动作/补证次数/有效期的 `AppealMandate`，以及区分提交、确认、决策与已核验账户状态的不同事件。
+AppealOS 不围绕聊天框组织。其价值来自持久状态与外部行动：一次用户批准后的执行可完成提交、一次授权补证与直接核验；Firestore 是持久工作流权威；`AppealMandate` 限定目标、证据、动作、补证次数与有效期。
 
 **安全模型：模型解释，代码授权**
 
-AppealOS 把内部分析与外部行动分离。`AnalysisConsent` 只能处理已选证据，不能披露证据或联系平台；`AppealMandate` 只能写入指定目标与证据集，不能新增收件方、新增主张或披露新证据类别。Gemini 提出结构化事实与工具调用，确定性代码控制期限、权限、状态迁移、幂等与写入。撤销授权会阻止尚未进入派发状态的动作。
+AppealOS 把内部分析与外部行动分离。`AnalysisConsent` 只能处理已选证据，不能披露证据或联系平台；`AppealMandate` 只能写入指定目标与证据集，不能新增收件方、新增主张或披露新证据类别。Gemini 提出结构化事实，确定性代码在每个边界重新校验同意、有效期、目标、动作、证据、模板、次数、状态迁移与幂等。
 
 **状态与诚实声明**
 
-救援切片已在 Google Cloud 跑通：MockDrop 提供 Node.js HTTP API，包含确定性申诉/账户状态流转、稳定请求与响应哈希、幂等重放、回执恢复，以及 7 个通过的集成测试；AppealOS FastAPI 服务通过 Google ADK 根代理与 `gemini-3.5-flash` 完成 `reset → notice → consent → mandate → submit → supplement → verify ACTIVE`，并调用已部署的 MockDrop。Firestore 持久化、Pub/Sub 连接与 Evidence Vault 明确标记为 **planned**；可点击的单页 case workspace UI 已在 AppealOS 地址上线。本提交不声称存在 DoorDash、Uber、TikTok、Amazon、GitHub 或任何真实平台集成。
+救援切片已在 Google Cloud 跑通：MockDrop 提供 Node.js HTTP API 与 7 个通过的集成测试；AppealOS FastAPI 服务通过真实 Google ADK `LlmAgent` 调用 `gemini-3.5-flash`，并用 Firestore 保存案件、授权、回执与时间线。仓库版本新增 case 恢复、严格 mandate 校验、哈希链审计时间线与 Pub/Sub push consumer。已部署 Pub/Sub/OIDC 接线和 Evidence Vault 明确标记为 **planned**。本提交不声称任何真实平台集成。
 
 ### 2.4 功能与能力
 
 - **结构化通知解析**：仅解析白名单内的合成通知，产出指控类型、事件窗口、标准化期限与置信度；不确定时暂停待用户复核。
 - **两级用户同意**：`AnalysisConsent` 用于内部证据处理；独立的受限 `AppealMandate` 用于外部行动。
-- **加密证据库原型**：三份合成证据以 AES-256-GCM 密文保存，含明文/密文哈希、nonce 与 AAD；哈希不匹配即隔离。
-- **带引用的事实时间线**：每一条草拟主张都引用证据 ID、明文哈希与精确来源片段；因果与低置信主张需用户确认。
+- **用户选择的证据范围**：三份合成 fixture 提供 ID、采集时间、类型与内容哈希；MVP 不声称已实现加密 Vault。
+- **有依据的主张**：每条已验证主张只能引用用户选择的证据 ID 与白名单政策条款 ID。
 - **版本化政策档案**：申诉主张映射到冻结的 MockDrop 政策条款 ID。
 - **受限外部行动**：单次申诉提交、单次已授权补证、轮询与账户状态直接核验，全部在同一授权下完成。
-- **异步补证处理**：在授权范围内，无需再次提示即可响应一次 Pub/Sub 补证事件；重放不会产生重复平台动作。
+- **一次批准后的执行**：明确批准 consent 与 mandate 后，一次调用完成提交、授权补证与直接核验；相同补证路径的 Pub/Sub consumer 已在代码中实现，线上事件投递仍属 planned。
 - **先有回执再庆祝**：区分 `SUBMITTED`、`ACKNOWLEDGED`、`DECIDED_APPROVED` 与直接核验的 `ACCOUNT_ACTIVE`。
 - **行动时间线**：记录行为主体、时间、关联 ID、案件版本、事件哈希与回执引用，不暴露原始证据或令牌。
 - **Due Process 审计导出**：下载脱敏、哈希一致的 JSON 案件记录，用于人工升级。
 - **确定性安全护栏**：模型输出不能授权动作或写案件状态；目标、方法、路径、证据字段、字节上限、期限与幂等由代码强制。
-- **当前本地已验证切片**：MockDrop 的 reset/account/appeal/supplement/decision/receipt API、7 个 HTTP 集成测试与可选本地 bearer-token 写保护。
+- **已验证测试证据**：31 个 Python 测试覆盖授权、恢复、并发事件、自主执行、Pub/Sub、health evidence 与篡改检测；7 个 Node HTTP 测试覆盖 MockDrop 状态、回执与幂等。
 
 ### 2.5 使用技术
 
 - **Gemini 3.5+**（`gemini-3.5-flash`，Vertex AI `global` endpoint）：结构化通知抽取、证据相关性、政策与事实匹配、回复分类与有依据的起草。模型只解释，不授权动作或写案件状态。
-- **Google ADK**：根代理、类型化工具、工具调用前授权回调、工具调用后回执捕获。
-- **Cloud Run**：两个已部署救援服务——`appealos`（https://appealos-agrdlgr4ea-uc.a.run.app）与 `mockdrop`（https://mockdrop-agrdlgr4ea-uc.a.run.app），各自使用独立服务身份；可点击的单页 case workspace UI 已在 AppealOS 地址上线。
-- **Firestore**：案件、授权、回执与事件历史的持久工作流权威（cloud 阶段 planned）。
+- **Google ADK**：真实 `LlmAgent` runner 与类型化结构输出，用于通知解析、证据相关性和有依据的主张起草。
+- **Cloud Run**：两个已部署救援服务——`appealos` 与 `mockdrop`。当前部署使用项目默认 compute service identity；独立最小权限身份仍属 planned。
+- **Firestore**：已实现的持久工作流权威，保存案件、授权、回执、事件历史与外部事件去重状态。
 - **Cloud Storage + Secret Manager**：加密合成证据与演示密钥存储（cloud 阶段 planned）。
-- **Cloud Pub/Sub**：P0 补证/决策事件路径的 `mockdrop-platform-events`（planned）。
+- **Cloud Pub/Sub**：env-gated publisher 与幂等 push consumer 已在代码中实现；线上 topic/subscription/OIDC 投递属 planned。
 - **Cloud Logging**：脱敏元数据与结构化日志，不含原始证据或密钥。
 - **Node.js**：已实现的本地 MockDrop API 与集成测试。
 - **Python FastAPI + 静态 HTML/JS**：FastAPI/ADK 服务与单页 case workspace UI（状态时间线、consent/mandate 控制、evidence 卡、outcome 导出）已实现；未声称编译型 React UI。
@@ -207,7 +207,7 @@ AppealOS 只使用合成 fixture 与公开参考资料，不摄取真实用户�
 - [ ] 工程师回填确切 Gemini model ID、endpoint、region 与 ADK version（部署 smoke test 后）。
 - [ ] 用户回填 `[DEMO_VIDEO_URL]`（YouTube/Vimeo/Drive 外链）；仓库地址已回填为 https://github.com/rectinajh/AppealOS。
 - [ ] 仓库公开可见且未提交 `.env`、`.pem`、`.key` 或任何 API key。
-- [ ] 演示视频 ≤ 4 分钟，且展示 Gemini、ADK、Cloud Run、Pub/Sub 与外部状态变化证据。
+- [ ] 演示视频 ≤ 4 分钟，且展示 Gemini、ADK、Cloud Run 与外部状态变化证据；Pub/Sub 若未线上接通必须明确标注为 code-complete / not deployed。
 - [ ] README 的 `Submission / Devpost` 小节与 `SUBMISSION.md` 一致；如与工程师 README 改动冲突，以本 `SUBMISSION.md` 为准。
 
 ### 回填项 / Placeholders to backfill

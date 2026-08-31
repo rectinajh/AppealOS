@@ -20,7 +20,7 @@ Latest AppealOS revision: `appealos-00003-hwk` (2026-09-01). It serves the upgra
 - Model: `gemini-3.5-flash`
 - Backend: Vertex AI, `global` endpoint
 - Google Agent Framework: Google ADK `google-adk==2.8.0`
-- ADK root agent: `appeal_runtime_agent`
+- ADK runtime: three structured `LlmAgent` tasks for notice extraction, evidence relevance, and claim drafting
 
 Gemini is used for notice extraction, evidence relevance, and claim drafting. Deterministic Python code owns all state transitions, mandate guards, idempotency keys, and MockDrop writes.
 
@@ -37,7 +37,7 @@ gcloud run deploy mockdrop \
   --allow-unauthenticated \
   --port 8080 \
   --memory 512Mi --cpu 1 \
-  --min-instances 0 --max-instances 1 \
+  --min-instances 0 --max-instances 1 --concurrency 1 \
   --no-cpu-throttling
 ```
 
@@ -52,15 +52,17 @@ gcloud run deploy appealos \
   --allow-unauthenticated \
   --port 8080 \
   --memory 512Mi --cpu 1 \
-  --min-instances 0 --max-instances 1 \
+  --min-instances 0 --max-instances 1 --concurrency 1 \
   --no-cpu-throttling \
   --timeout 300 \
   --set-env-vars=MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app,GOOGLE_CLOUD_PROJECT=boxwood-scope-364905,GOOGLE_CLOUD_LOCATION=global,APPEALOS_STORE_BACKEND=firestore
 ```
 
-## Verified end-to-end result
+## Verified end-to-end result for revision `appealos-00003-hwk`
 
-`POST /demo/run` on the deployed AppealOS returns `final_state: ACCOUNT_ACTIVE` with the required timeline:
+This is historical deployment evidence. Repository source now requires an explicit `case_id`, separate consent, and mandate approval before `/demo/run`; redeploy before using the revised API against the live URL.
+
+`POST /demo/run` on revision `appealos-00003-hwk` returned `final_state: ACCOUNT_ACTIVE` with this timeline:
 
 ```text
 DEMO_RESET

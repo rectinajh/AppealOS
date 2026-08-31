@@ -18,7 +18,7 @@ The safety boundary is the product: **models interpret, code authorizes**. Analy
 
 - 🧠 Gemini 3.5+ for structured interpretation
 - 🛠️ Google ADK for typed tools
-- ☁️ Cloud Run + Firestore + Pub/Sub for the workflow
+- ☁️ Cloud Run + Firestore live; Pub/Sub publisher/consumer code ready, deployment pending
 - ✅ Receipts before celebration; verified `ACTIVE` before success
 
 #AllThingsAgenticHackathon
@@ -33,7 +33,7 @@ The safety boundary is the product: **models interpret, code authorizes**. Analy
 
 - 🧠 Gemini 3.5+ 做结构化解释
 - 🛠️ Google ADK 做类型化工具
-- ☁️ Cloud Run + Firestore + Pub/Sub 跑通工作流
+- ☁️ Cloud Run + Firestore 已跑通；Pub/Sub 发布/消费代码完成，线上接线待部署
 - ✅ 先有回执再庆祝；核验到 `ACTIVE` 才算成功
 
 #AllThingsAgenticHackathon

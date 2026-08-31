@@ -149,10 +149,10 @@
 - 结构日志卡片：`caseId`、`correlationId`、`receiptId`，无原始证据/密钥。
 
 **旁白 / Narration cue（EN）**
-"The working path runs on two separate Cloud Run services. Gemini proposes structured facts and tools; deterministic code authorizes every write. Pub/Sub delivers the supplement event, and structured logs carry IDs and hashes — never raw evidence or secrets."
+"The working path runs on two separate Cloud Run services. Gemini proposes structured facts; deterministic code authorizes every write. The synchronous demo receives a typed supplement request from MockDrop, while the Pub/Sub consumer is code-complete but not deployed. Structured logs carry IDs and hashes, never raw evidence or secrets."
 
 **中文提示**
-"可跑通的路径部署在两个独立的 Cloud Run 服务上。Gemini 提出结构化事实与工具调用，确定性代码授权每一次写入。Pub/Sub 投递补证事件，结构化日志只含 ID 与哈希——从不记录原始证据或密钥。"
+"可跑通的路径部署在两个 Cloud Run 服务上。Gemini 提出结构化事实，确定性代码授权每一次写入。同步演示从 MockDrop 收到类型化补证请求；Pub/Sub consumer 已代码完成但尚未部署。结构化日志只含 ID 与哈希，不记录原始证据或密钥。"
 
 **回填 / Backfill**
 - 所有 `[BRACKETED]` 字段由工程师在部署 smoke test 后替换为真实截图/录屏。

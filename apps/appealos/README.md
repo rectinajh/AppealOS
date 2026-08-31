@@ -1,73 +1,73 @@
-# AppealOS ADK rescue runtime
+# AppealOS ADK runtime
 
-Python FastAPI service that runs the AppealOS binding demo and a real Google ADK root agent (`appeal_runtime_agent`) over **Gemini 3.5 Flash**.
+Python FastAPI service for a bounded, user-owned appeal workflow over **Gemini 3.5 Flash** and **Google ADK 2.8.0**.
 
-Deterministic domain code owns every state transition, mandate guard, idempotency key, and external MockDrop write. Gemini/ADK is called only for notice extraction, evidence relevance, and claim drafting.
-
-## Hosted workspace
-
-Deployed case workspace: https://appealos-agrdlgr4ea-uc.a.run.app/
+Gemini/ADK performs three structured reasoning tasks: notice extraction, evidence relevance, and grounded claim drafting. Deterministic domain code owns consent, mandate authorization, state transitions, idempotency keys, MockDrop writes, and final account verification.
 
 ## What is implemented
 
-- FastAPI service with a single ADK root agent (`google-adk==2.8.0`).
-- Real Vertex AI calls to `gemini-3.5-flash` at the `global` endpoint.
-- End-to-end flow: reset → notice → consent → mandate → submit → supplement → verify `ACTIVE`.
-- Deterministic notice validation, citation validation, mandate scope, supplement cycle guard, and direct account-state verification.
-- Typed HTTP adapter for the deployed/local MockDrop service.
-- JSON stdout logs recording every Gemini/ADK call and MockDrop HTTP request.
-- A polished, dark glassmorphism single-page case workspace UI at `/` with an animated status timeline, two-step confirm states, loading/success motion, expandable evidence cards, and outcome export. No external CDN or framework is used, so the workspace works offline from the Cloud Run origin.
+- Real Vertex AI calls to `gemini-3.5-flash` through Google ADK `LlmAgent` runners.
+- Explicit `AnalysisConsent` followed by a destination-, action-, artifact-, cycle-, and expiry-scoped `AppealMandate`.
+- One authorized execution call that submits the appeal, answers one approved supplement request, and directly verifies `ACTIVE`.
+- Firestore case recovery by `caseId`, with an in-memory local fallback.
+- Hash-chained timeline events plus a deterministic integrity-verification endpoint.
+- Idempotent Pub/Sub push consumer at `POST /events/pubsub`; OIDC verification is env-gated.
+- A typed HTTP adapter to MockDrop and a single-page case workspace at `/`.
+- No arbitrary URL, shell, filesystem, email, recipient, or real-platform tool.
+
+The hosted revision at https://appealos-agrdlgr4ea-uc.a.run.app/ may lag repository `main`; check `/health` for the deployed revision, model, ADK version, storage backend, and Pub/Sub OIDC status.
 
 ## Run locally
 
 Prerequisites: Python 3.12+ and `gcloud` authenticated to a project with Vertex AI enabled.
 
 ```bash
-cd apps/appealos
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-
-# Use the deployed MockDrop (recommended):
 export MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app
-# Optional for local MockDrop instead:
-# export MOCKDROP_BASE_URL=http://localhost:8080
-
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-Then open the case workspace at http://localhost:8080/ or run the full binding demo:
-
-```bash
-curl -X POST http://localhost:8080/demo/run -H 'content-type: application/json'
-```
-
-Expected final state: `ACCOUNT_ACTIVE`.
+Open http://localhost:8080/. The UI stores only the synthetic `caseId` in local storage so it can reload a Firestore-backed case after a Cloud Run restart.
 
 ## API
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/` | Single-page case workspace UI |
-| `GET` | `/health`, `/healthz` | Health check |
-| `POST` | `/demo/reset` | Reset synthetic rider and case |
-| `POST` | `/demo/notice` | ADK/Gemini notice extraction |
-| `POST` | `/demo/consent` | Grant scoped analysis consent |
-| `POST` | `/demo/mandate` | Draft claims and approve appeal mandate |
-| `POST` | `/demo/submit` | Submit the initial appeal to MockDrop |
-| `POST` | `/demo/supplement` | Submit the authorized device-log supplement |
-| `POST` | `/demo/verify` | Directly verify MockDrop account is `ACTIVE` |
-| `POST` | `/demo/run` | Run the entire binding flow in one request |
-| `GET` | `/demo/case` | Read current case state and timeline |
-| `GET` | `/demo/evidence` | Read model/evidence config and MockDrop URL |
+| `GET` | `/` | Single-page case workspace |
+| `GET` | `/health`, `/healthz` | Runtime evidence and health |
+| `POST` | `/demo/reset` | Reset MockDrop and create a synthetic case |
+| `POST` | `/demo/notice` | ADK/Gemini notice extraction; requires `case_id` |
+| `POST` | `/demo/consent` | Grant selected-artifact analysis consent |
+| `POST` | `/demo/mandate` | Draft claims and approve the bounded mandate |
+| `POST` | `/demo/run` | Execute submit → supplement → verify after approval |
+| `POST` | `/demo/submit`, `/demo/supplement`, `/demo/verify` | Individually test deterministic workflow steps |
+| `GET` | `/demo/case/{case_id}` | Reload a persisted case |
+| `GET` | `/demo/case/{case_id}/verify-timeline` | Verify its event hash chain |
+| `GET` | `/demo/evidence` | Inspect synthetic evidence metadata and policy |
+| `POST` | `/events/pubsub` | Consume an idempotent MockDrop platform event |
 
-## Env vars
+`/demo/run` does **not** create consent or approve a mandate. The human boundary is explicit: reset → parse → select evidence and consent → approve mandate → execute.
+
+## Environment variables
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `MOCKDROP_BASE_URL` | `http://localhost:8080` | MockDrop origin |
-| `MOCKDROP_API_TOKEN` | empty | Optional bearer token for MockDrop writes |
-| `GOOGLE_CLOUD_PROJECT` | `boxwood-scope-364905` | Vertex AI project |
-| `GOOGLE_CLOUD_LOCATION` | `global` | Vertex AI region |
-| `GEMINI_MODEL_ID` | `gemini-3.5-flash` | Eligible Gemini model |
-| `GEMINI_API_KEY` | empty | Optional Gemini Developer API key; otherwise Vertex AI ADC/gcloud auth |
+| `MOCKDROP_BASE_URL` | `http://localhost:8080` | Fixed MockDrop origin |
+| `MOCKDROP_API_TOKEN` | empty | Optional MockDrop bearer token |
+| `GOOGLE_CLOUD_PROJECT` | `boxwood-scope-364905` | Vertex AI / Firestore project |
+| `GOOGLE_CLOUD_LOCATION` | `global` | Vertex AI location |
+| `GEMINI_MODEL_ID` | `gemini-3.5-flash` | Gemini model |
+| `GEMINI_API_KEY` | empty | Optional Developer API key; otherwise Vertex AI ADC |
+| `APPEALOS_STORE_BACKEND` | `memory` | `memory` or `firestore` |
+| `PUBSUB_VERIFY_OIDC` | `false` | Require a verified bearer token on Pub/Sub pushes |
+| `PUBSUB_AUDIENCE` | empty | Expected Cloud Run audience when OIDC is enabled |
+
+## Tests
+
+```bash
+python -m unittest -v
+```
+
+The suite covers consent and mandate boundaries, destination/artifact enforcement, autonomous execution, case recovery, Pub/Sub decoding, and hash-chain tamper detection.

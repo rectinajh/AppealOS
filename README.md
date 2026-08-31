@@ -10,7 +10,7 @@
 
 ## Project status
 
-**Rescue slice live on Google Cloud.** MockDrop and the AppealOS ADK rescue runtime are both deployed to Cloud Run and verified end-to-end. The demo reaches `ACCOUNT_ACTIVE` through the required `reset → notice → consent → mandate → submit → supplement → verify` path. Firestore persistence for the case, mandate, receipts, and event history is implemented and verified against the live project (`APPEALOS_STORE_BACKEND=firestore`); Pub/Sub platform-event delivery is implemented behind `MOCKDROP_PUBSUB_ENABLED`/`PUBSUB_VERIFY_OIDC` flags but not yet deployed, and the Evidence Vault remains planned. A clickable single-page case workspace UI is live at https://appealos-606769518273.us-central1.run.app.
+**Rescue slice live on Google Cloud; award-readiness upgrade implemented in this repository.** The deployed revision proves real Gemini 3.5 Flash calls through Google ADK, two Cloud Run services, Firestore persistence, typed MockDrop writes, and direct `ACCOUNT_ACTIVE` verification. The current source adds strict artifact/destination/expiry checks, case recovery by ID, an explicit Pub/Sub push route, a hash-chained timeline, and one approved execution call. Until that revision is redeployed, the hosted UI may lag the source; `/health` identifies exactly what is running. The Evidence Vault and deployed Pub/Sub/OIDC wiring remain planned.
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
@@ -57,11 +57,11 @@ The hackathon scope is deliberately narrow:
 - exactly three evidence artifacts: one delivery receipt, one GPS trace, and one device log;
 - one frozen policy profile;
 - one initial appeal submission;
-- one Pub/Sub supplement request;
+- one supplement request returned by MockDrop, plus a code-complete Pub/Sub push consumer;
 - one authorized supplement;
 - one verified account transition from `SUSPENDED` to `ACTIVE`;
-- one encrypted synthetic Evidence Vault prototype;
-- one complete Agent action timeline.
+- one in-memory synthetic evidence fixture set with hashes (not an encrypted Vault);
+- one complete, hash-chained Agent action timeline.
 
 The deterministic demo reveals that a cellular-network handoff was mistaken for location fraud. AppealOS submits the case, receives a request for the device log, supplies it within the user's mandate, then calls MockDrop's account-status endpoint separately before declaring success.
 
@@ -89,13 +89,16 @@ MockDrop currently provides:
 
 AppealOS currently provides:
 
-- a FastAPI service with a real Google ADK root agent (`appeal_runtime_agent`, `google-adk==2.8.0`);
+- a FastAPI service with real Google ADK `LlmAgent` runners (`google-adk==2.8.0`);
 - real Vertex AI calls to `gemini-3.5-flash` at the `global` endpoint;
 - deterministic notice validation, citation validation, mandate scope, supplement-cycle guard, and direct account-state verification;
 - a durable case store with an in-memory fallback and a verified Firestore backend (`app/store.py`);
 - a Pub/Sub push endpoint `/events/pubsub` that consumes supplement events idempotently and still verifies `ACTIVE` directly;
 - a typed HTTP adapter to MockDrop;
-- a one-request `/demo/run` binding demo returning `ACCOUNT_ACTIVE`.
+- a post-approval `/demo/run` execution that performs submit → supplement → verify and returns `ACCOUNT_ACTIVE` without fabricating user consent;
+- strict consent/mandate checks for expiry, adapter, account, action, artifact, supplement template, and cycle count;
+- case reload by ID and a hash-chain verification endpoint for the action timeline;
+- 31 Python tests covering authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, endpoint evidence, and tamper detection.
 
 Deployed Cloud Run URLs:
 
@@ -135,13 +138,7 @@ export GOOGLE_CLOUD_PROJECT=boxwood-scope-364905
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-Run the full binding demo:
-
-```bash
-curl -X POST http://localhost:8080/demo/run -H 'content-type: application/json'
-```
-
-Expected final state: `ACCOUNT_ACTIVE`. See [apps/appealos/README.md](apps/appealos/README.md) for the step-by-step API.
+Use the web workspace for the full demo. It deliberately requires separate human consent and mandate approval; `/demo/run` only executes an already-approved case and never auto-approves on the user's behalf. Expected final state after the approved execution: `ACCOUNT_ACTIVE`. The exact endpoint contract is documented in [apps/appealos/README.md](apps/appealos/README.md).
 
 ### Redeploy
 
@@ -152,7 +149,7 @@ The exact `gcloud run deploy` commands for both services are recorded in [docs/D
 AppealOS is not organized around a chat box. Its value comes from durable state and external action:
 
 - **Background execution:** the case continues after approval without repeated prompts.
-- **Tool use:** the ADK root agent interprets notices and drafts grounded claims; deterministic code performs MockDrop writes, mandate guards, and status verification.
+- **Tool use:** ADK agents interpret notices and draft grounded claims; deterministic adapters perform MockDrop writes, mandate guards, and status verification.
 - **Memory:** Firestore is the durable authority for the case, mandate, receipts, and event history.
 - **Scoped autonomy:** an `AppealMandate` limits destination, evidence, actions, supplement count, and expiry.
 - **Verifiable progress:** `SUBMITTED`, `ACKNOWLEDGED`, `APPROVED`, and `ACCOUNT_ACTIVE` are different events.
@@ -167,32 +164,26 @@ AppealOS separates internal analysis from external action.
 | `AnalysisConsent` | Process selected synthetic artifacts to build the timeline and draft claims | Disclose evidence or contact a platform |
 | `AppealMandate` | Send named claims and evidence to one adapter, handle one allowed supplement, poll, and verify | Contact a new recipient, add a new claim, or disclose a new evidence class |
 
-Revocation blocks actions that have not entered `DISPATCHING`. It cannot recall a remote request already in flight or accepted by the platform.
+The MVP uses one-hour consent and mandate expiry plus a one-cycle supplement limit. A revocation endpoint is not implemented; the UI and submission do not claim otherwise.
 
-## Proposed Google Cloud architecture
+## Implemented and optional Google Cloud architecture
 
 ```mermaid
 flowchart LR
     U["User"] --> A["AppealOS UI + ADK Runtime · Cloud Run"]
     A --> F[("Firestore · workflow authority")]
-    A --> S[("Cloud Storage · encrypted synthetic evidence")]
-    A --> G["Eligible Gemini 3.5+ model"]
-    A --> PA["Pub/Sub · appealos-actions"]
-    PA --> A
-    A -->|"OIDC + idempotency key"| M["MockDrop · separate Cloud Run service"]
-    M --> PM["Pub/Sub · mockdrop-platform-events"]
-    PM --> A
+    A --> G["Gemini 3.5 Flash · Vertex AI"]
+    A -->|"fixed adapter + idempotency key"| M["MockDrop · separate Cloud Run service"]
+    M -. "optional Pub/Sub push · code complete" .-> A
     A -->|"direct status verification"| M
-    A --> L["Cloud Logging · redacted traces"]
+    A --> L["Cloud Logging · structured runtime metadata"]
 ```
 
-Rendered architecture asset: [PNG](docs/assets/appealos-architecture.png) · [SVG](docs/assets/appealos-architecture.svg).
-
-The binding rescue build implements the MockDrop platform-events topic and the demonstrated supplement path in code. Pub/Sub OIDC enforcement and deployed end-to-end delivery remain labeled as planned until verified in a deployed revision.
+The synchronous demo uses the supplement request in MockDrop's typed response. MockDrop publication and AppealOS consumption are implemented behind flags; a live topic, subscription, and OIDC-enforced delivery are not claimed until deployed and verified.
 
 ## Gemini, ADK, and deterministic code
 
-Gemini is proposed for structured notice extraction, evidence relevance, policy-to-fact matching, response classification, and grounded drafting. Google Agent Development Kit provides the root agent, typed tools, and tool callbacks.
+Gemini is used for structured notice extraction, evidence relevance, and grounded claim drafting. Google ADK supplies the real `LlmAgent` runners and structured output schemas. Deterministic Python — not an unverified model callback — owns authorization and every external write.
 
 The model is not allowed to authorize actions or write case state. Deterministic code controls:
 
@@ -241,7 +232,7 @@ Devpost visual and demo deliverables live in [`submission/`](submission/):
 - [Demo video, 1280×720 MP4, 3:58](submission/demo-video.mp4) — English narration with burned-in English subtitles
 - [English subtitles](submission/demo-subtitles-en.srt) and [Simplified Chinese subtitles](submission/demo-subtitles-zh.srt)
 - [Devpost 16:9 cover, 1920×1080](submission/devpost-cover-1920x1080.png)
-- [Architecture diagram PNG](submission/assets/appealos-architecture.png) and [SVG](submission/assets/appealos-architecture.svg)
+- The Mermaid architecture in this README is authoritative; legacy rendered assets are not submission-ready until regenerated from it.
 - UI/flow screenshots in [`submission/screenshots/`](submission/screenshots/)
 - [Local MockDrop API transcript](submission/mockdrop-api-transcript.txt)
 
@@ -263,7 +254,7 @@ The GCP running-evidence segment now has live `.run.app` URLs, Cloud Run deploy 
 └── tests/              # proposed state, mandate, adapter, and security tests
 ```
 
-`apps/mockdrop` and `apps/appealos` exist today. Firestore persistence and the Pub/Sub supplement path are implemented in code; encrypted fixture packaging and deployed Pub/Sub/OIDC remain implementation targets. The single-page case workspace UI is implemented in `apps/appealos/app/static/index.html`.
+`apps/mockdrop` and `apps/appealos` exist today. Firestore persistence, case recovery, the Pub/Sub consumer route, strict mandate enforcement, and the single-page workspace are implemented in code. Encrypted fixture packaging and deployed Pub/Sub/OIDC remain implementation targets.
 
 ## Safety boundaries
 

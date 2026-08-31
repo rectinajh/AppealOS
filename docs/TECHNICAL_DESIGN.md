@@ -1,8 +1,8 @@
 # AppealOS Runtime Technical Design
 
-**Status:** Proposed, approved for implementation
+**Status:** Rescue slice implemented; production extensions remain proposed
 
-**Version:** 0.1
+**Version:** 0.2
 
 **Scope:** Synthetic MockDrop hackathon MVP
 
@@ -25,46 +25,44 @@ This document specifies the target architecture and records the current implemen
 | Cloud Run OIDC | Planned | Current write guard is an optional local bearer token |
 | Pub/Sub event publication | Implemented in code (env-gated) | `apps/mockdrop/src/pubsub.js`; not yet deployed |
 | AppealOS Firestore persistence | Implemented and verified | `apps/appealos/app/store.py`; verified against live Firestore |
-| AppealOS ADK runtime | Implemented rescue slice | `apps/appealos`; real ADK root agent + `gemini-3.5-flash` |
-| AppealOS UI | Planned | No compiled React UI yet |
+| AppealOS ADK runtime | Implemented rescue slice | Three structured Google ADK `LlmAgent` tasks + `gemini-3.5-flash` |
+| AppealOS UI | Implemented | Static single-page case workspace served by FastAPI |
+| Consent and mandate guards | Implemented and tested | Expiry, destination, account, action, artifact, template, and supplement cycle |
+| Case recovery and timeline integrity | Implemented and tested | Firestore reload by `caseId`; SHA-256 event hash chain |
+| Pub/Sub push consumer | Implemented in code | `/events/pubsub`; live topic/subscription/OIDC wiring not yet deployed |
 | Google Cloud deployment | Deployed rescue slice | https://appealos-agrdlgr4ea-uc.a.run.app |
 
 ## 2. Architecture decisions
 
-1. **One ADK root agent.** Multi-agent roles add coordination cost without improving the single-case proof.
+1. **Small ADK task agents.** Three typed `LlmAgent` runs cover extraction, relevance, and drafting; a fictional orchestration layer is not claimed.
 2. **Firestore is the workflow authority.** ADK sessions help one invocation but never carry the only durable state.
 3. **Models interpret; code authorizes.** Gemini proposes structured facts and tools. Deterministic code controls deadlines, permissions, transitions, and writes.
-4. **Two deployed origins.** AppealOS and MockDrop run as separate Cloud Run services with separate service identities.
+4. **Two deployed origins.** AppealOS and MockDrop run as separate Cloud Run services. The current deployment uses the same default compute service account; separate identities are a production hardening task.
 5. **Synthetic fixtures only.** The public build has no production identity, real-user upload, or live-platform adapter.
 6. **Hash consistency, not authenticity.** Event hashes expose internal inconsistency under a trusted service boundary; they do not prove an administrator did not rewrite the whole export.
-7. **One binding rescue path.** The deployed demo prioritizes the external write, Pub/Sub supplement, replay protection, and direct status verification over general infrastructure.
+7. **One binding rescue path.** The demo prioritizes the external write, one authorized supplement, replay protection, and direct status verification. Pub/Sub components exist in code but are not presented as live until wired and verified.
 
 ## 3. System context
 
 ```mermaid
 flowchart LR
-    U["Browser / synthetic rider"] -->|"owner cookie"| A["AppealOS · Cloud Run"]
-    A --> ADK["Google ADK root agent"]
-    ADK --> G["Eligible Gemini 3.5+ model"]
-    A --> F[("AppealOS Firestore database")]
-    A --> S[("Cloud Storage")]
-    A --> SM["Secret Manager"]
-    A --> PA["Pub/Sub: appealos-actions · P1"]
-    PA --> A
-    A -->|"OIDC + fixed adapter"| M["MockDrop · Cloud Run"]
-    M --> MF[("MockDrop Firestore database")]
-    M --> PM["Pub/Sub: mockdrop-platform-events"]
-    PM --> A
-    A -->|"GET account state"| M
-    C["Cloud Scheduler · P1"] -->|"OIDC reconcile/cleanup"| A
-    A --> L["Cloud Logging · redacted metadata"]
+    U["Browser / synthetic rider"] -->|"caseId + explicit approval"| A["AppealOS · Cloud Run"]
+    A --> ADK["Google ADK structured agents"]
+    ADK --> G["Gemini 3.5 Flash · Vertex AI"]
+    A <--> F[("Firestore · case + mandate + timeline")]
+    A --> P["Deterministic policy gate"]
+    P -->|"fixed adapter + idempotency key"| M["MockDrop · Cloud Run"]
+    M -->|"typed supplement request"| P
+    M -. "optional Pub/Sub event · code complete" .-> A
+    P -->|"direct GET account state"| M
+    A --> L["Cloud Logging · structured metadata"]
 ```
 
 ## 4. Components
 
 ### 4.1 AppealOS Cloud Run service
 
-Proposed implementation: Python FastAPI application containing the Google ADK runtime and serving precompiled React assets.
+Current implementation: Python FastAPI application containing the Google ADK runtime and serving a self-contained static HTML/CSS/JS workspace.
 
 Responsibilities:
 
@@ -73,7 +71,7 @@ Responsibilities:
 - run the ADK agent and typed tools;
 - enforce analysis consent and Appeal Mandate policy;
 - persist case transitions, events, actions, and receipts;
-- consume authenticated Pub/Sub pushes;
+- consume Pub/Sub pushes, with OIDC verification available behind configuration;
 - call only the fixed MockDrop adapter;
 - serve the redacted audit export;
 - expose health and smoke-test evidence.
@@ -82,7 +80,7 @@ Responsibilities:
 
 MockDrop is a cooperative simulated external platform, not a real integration or independent adjudicator.
 
-The current local implementation uses Node.js built-in HTTP and an in-memory store. It implements all documented HTTP routes, deterministic approval/rejection, account activation, receipt lookup, and idempotent replay. It returns proposed outbound event payloads to its caller but does not publish Pub/Sub messages yet.
+The current implementation uses Node.js built-in HTTP and an in-memory store. It implements all documented HTTP routes, deterministic approval/rejection, account activation, receipt lookup, and idempotent replay. It returns outbound event payloads and can publish them when `MOCKDROP_PUBSUB_ENABLED=true`; that publisher is not enabled in the live revision.
 
 Cloud target responsibilities:
 
@@ -115,7 +113,7 @@ Gemini cannot:
 
 ### 4.4 Google ADK
 
-ADK defines `appeal_runtime_agent`, typed tools, before-tool authorization callbacks, and after-tool receipt capture. Each invocation reloads case state from Firestore. ADK session memory is never the sole source of a pending action or user permission.
+ADK runs three typed `LlmAgent` tasks with structured output schemas. Each workflow endpoint reloads case state from the configured store by `caseId`. ADK session memory is never the source of a pending action or user permission; deterministic service code validates model output and performs every external write.
 
 ## 5. Trust boundaries
 
@@ -126,8 +124,8 @@ notice text                 -> typed parser + schema validator
 policy text                 -> quoted context + clause allowlist
 evidence content            -> consent + hash/citation checks
 model output                -> transition and mandate guards          -> MockDrop typed API
-Pub/Sub payload             -> OIDC + binding + replay checks         <- MockDrop publisher
-browser request             -> owner-cookie hash check
+Pub/Sub payload             -> envelope + binding + replay checks     <- MockDrop publisher
+browser request             -> explicit synthetic caseId
 ```
 
 No Agent tool accepts an arbitrary URL, shell command, filesystem path, email address, or recipient.
@@ -384,9 +382,11 @@ The implementation should model “prior state” explicitly as `resumeState`; i
 - Polling and verification may continue after the appeal deadline if the case was submitted in time.
 - An expired mandate blocks new writes, polls, and verifications.
 - Authenticated inbound events may still be persisted after mandate expiry.
-- Revocation blocks actions before `DISPATCHING`; an in-flight or accepted remote request cannot be recalled.
+- Target only: revocation would block actions before `DISPATCHING`; the rescue slice implements expiry but no revocation endpoint.
 
-## 10. ADK tool surface
+## 10. Target ADK tool surface (not implemented in the rescue slice)
+
+The rescue slice uses structured `LlmAgent` calls plus deterministic Python adapters. The following tool surface is a production design, not a claim about the current runtime.
 
 | Tool | Side effect | Required guard |
 |---|---|---|
@@ -402,9 +402,9 @@ The implementation should model “prior state” explicitly as `resumeState`; i
 | `verify_account_state` | MockDrop read | Active mandate and verification budget |
 | `export_due_process_audit` | Creates JSON artifact | Valid owner and fixed redaction profile |
 
-## 11. MockDrop adapter contract
+## 11. Target MockDrop adapter contract
 
-All write/read endpoints require a Google-signed identity token with MockDrop as the audience, except the read-only demo console.
+The current adapter uses a fixed URL, idempotency keys, and an optional bearer token. Requiring a Google-signed identity token on all routes is a production target, not a property of the live revision.
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -489,9 +489,9 @@ The genesis `previousEventHash` is 64 zeroes. JavaScript and Python must share a
 
 It excludes owner tokens, encryption keys, raw evidence, coordinates, full device IDs, full prompts, and secrets. The export proves internal hash consistency only. It is not signed, externally anchored, immutable, or independently authentic.
 
-## 14. Evidence encryption
+## 14. Target evidence encryption (not implemented)
 
-The public MVP uses fixed synthetic fixtures.
+The public MVP currently uses fixed in-memory synthetic fixtures with content hashes. The following Cloud Storage/Secret Manager design is planned:
 
 1. A seed script calculates the plaintext SHA-256.
 2. It generates a unique random 96-bit nonce per artifact.
@@ -503,7 +503,7 @@ The public MVP uses fixed synthetic fixtures.
 
 Managed Python does not guarantee secure memory erasure. The server can decrypt fixtures. The UI must not describe this as zero-knowledge or exclusively user-held custody.
 
-## 15. Authentication and service identity
+## 15. Target authentication and service identity (not implemented)
 
 ### Browser demo owner
 

@@ -136,7 +136,7 @@ Acceptance criteria:
 - Consent names artifact IDs and purposes: timeline, policy match, and draft claims.
 - Consent records approval and expiry.
 - Consent alone cannot invoke MockDrop or disclose evidence.
-- Revocation blocks new internal artifact reads.
+- Production target: revocation blocks new internal artifact reads. The rescue slice implements expiry but no revocation endpoint.
 
 ### FR-04: Evidence Vault prototype — P0
 
