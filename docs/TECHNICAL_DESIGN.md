@@ -20,12 +20,13 @@ This document specifies the target architecture and records the current implemen
 |---|---|---|
 | MockDrop domain and HTTP API | Implemented locally | `apps/mockdrop/src`; deterministic appeal and account transitions |
 | MockDrop idempotency and receipt recovery | Implemented locally | Seven passing HTTP integration tests |
-| MockDrop container | Implemented, not deployed | `apps/mockdrop/Dockerfile` |
+| MockDrop container | Deployed to Cloud Run | https://mockdrop-agrdlgr4ea-uc.a.run.app |
 | MockDrop Firestore persistence | Planned | Current store is in-memory |
 | Cloud Run OIDC | Planned | Current write guard is an optional local bearer token |
 | Pub/Sub event publication | Planned | Current API returns the proposed outbound event in its response |
-| AppealOS ADK runtime and UI | Planned | No `apps/appealos` implementation yet |
-| Google Cloud deployment | Planned | No deployed revision yet |
+| AppealOS ADK runtime | Implemented rescue slice | `apps/appealos`; real ADK root agent + `gemini-3.5-flash` |
+| AppealOS UI | Planned | No compiled React UI yet |
+| Google Cloud deployment | Deployed rescue slice | https://appealos-agrdlgr4ea-uc.a.run.app |
 
 ## 2. Architecture decisions
 

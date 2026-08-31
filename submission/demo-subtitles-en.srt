@@ -1,0 +1,127 @@
+1
+00:00:00,150 --> 00:00:02,911
+Platforms already use algorithms to judge us.
+
+2
+00:00:02,991 --> 00:00:07,300
+AppealOS gives ordinary people a tireless digital advocate of their own.
+
+3
+00:00:07,600 --> 00:00:18,883
+A rider, seller, creator, or developer can lose an account, income, or audience because of an automated fraud signal, an identity failure, an unexplained complaint, or a moderation mistake.
+
+4
+00:00:18,963 --> 00:00:27,133
+Then the person is expected to reconstruct the allegation, the policy, the deadline, and the follow-up process through a contextless form.
+
+5
+00:00:27,213 --> 00:00:31,104
+The affected person cannot see which facts or policies matter.
+
+6
+00:00:31,184 --> 00:00:38,187
+Deadlines and supplement requests are easy to miss, and the same context must be rebuilt over and over.
+
+7
+00:00:38,267 --> 00:00:41,110
+Rejection leaves no portable record for human escalation.
+
+8
+00:00:41,410 --> 00:00:45,565
+AppealOS turns a platform suspension into an executable case.
+
+9
+00:00:45,645 --> 00:01:00,418
+It reads the notice, identifies the allegation and the deadline, inspects only user-approved evidence, reconstructs a citation-backed fact timeline, compares the facts with a versioned policy profile, and compiles grounded claim units.
+
+10
+00:01:00,498 --> 00:01:11,930
+After one scoped Appeal Mandate, the agent submits, handles one authorized supplement, tracks the response, and verifies a clear result: restored, rejected, or human escalation.
+
+11
+00:01:12,230 --> 00:01:17,642
+Here is the case workspace. A MockDrop rider is suspended for abnormal location.
+
+12
+00:01:17,722 --> 00:01:28,962
+AppealOS extracts the allegation, the incident window, and the deadline, and shows exactly three synthetic evidence artifacts: a delivery receipt, a GPS trace, and a device log.
+
+13
+00:01:29,042 --> 00:01:38,090
+The user grants analysis consent first. Analysis means building the timeline and drafting claims. It does not disclose anything to the platform.
+
+14
+00:01:38,390 --> 00:01:46,937
+Next, the agent compiles grounded claim units. Every claim carries artifact citations, a source span, and a confidence result.
+
+15
+00:01:47,017 --> 00:01:57,362
+The user reviews one scoped Appeal Mandate: a single recipient, named claims, allowed evidence, one supplement cycle, polling, verification, and a seventy-two-hour expiry.
+
+16
+00:01:57,442 --> 00:02:03,180
+Any new claim, new recipient, or new evidence class requires a new mandate.
+
+17
+00:02:03,480 --> 00:02:09,844
+After one approval, the agent submits the initial appeal through a typed adapter with an idempotency key.
+
+18
+00:02:09,924 --> 00:02:14,791
+MockDrop accepts the appeal and publishes a supplement request for the device log.
+
+19
+00:02:14,871 --> 00:02:24,120
+Because the device log is already inside the mandate, AppealOS supplies it automatically, with no second user prompt. The account transitions from suspended to active.
+
+20
+00:02:24,420 --> 00:02:30,999
+Every external write leaves a durable receipt. Submission, acknowledgement, supplement, and decision are distinct events.
+
+21
+00:02:31,079 --> 00:02:40,260
+Replaying the supplement event produces no duplicate platform action, because the idempotency key and request hash are checked by deterministic code.
+
+22
+00:02:40,560 --> 00:02:49,728
+AppealOS never equates approval text with restored access. Only after a direct account-status call returns active does it close the case.
+
+23
+00:02:49,808 --> 00:02:58,510
+The user can then download a redacted, hash-consistent due-process audit export. The record excludes raw evidence, coordinates, keys, and tokens.
+
+24
+00:02:58,810 --> 00:03:04,690
+Under the hood, the AppealOS UI and ADK runtime run on Cloud Run.
+
+25
+00:03:04,770 --> 00:03:12,912
+Gemini handles structured notice extraction, evidence relevance, and grounded drafting. Deterministic code enforces deadlines, mandate scope, and idempotency.
+
+26
+00:03:12,992 --> 00:03:18,420
+Firestore is the durable workflow authority. Cloud Storage holds encrypted synthetic evidence.
+
+27
+00:03:18,500 --> 00:03:26,000
+Pub/Sub carries the supplement event from MockDrop back to the runtime, and Cloud Logging keeps redacted traces.
+
+28
+00:03:26,300 --> 00:03:37,371
+For the deployed revision, this segment will show the backend running on Google Cloud: the live Cloud Run service URL, the running revision, and the logged request path in Cloud Logging and Vertex AI.
+
+29
+00:03:37,451 --> 00:03:41,980
+This slot is reserved until the deployment evidence from the engineering task is available.
+
+30
+00:03:42,280 --> 00:03:50,645
+AppealOS is a synthetic proof of concept. It never promises reinstatement, and every claim stays inside user-approved scope.
+
+31
+00:03:50,725 --> 00:03:54,442
+One approval. One authorized supplement. One verified outcome.
+
+32
+00:03:54,522 --> 00:03:58,130
+AppealOS: a digital advocate for an algorithmic world.

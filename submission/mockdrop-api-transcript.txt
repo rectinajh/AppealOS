@@ -1,0 +1,204 @@
+$ POST /v1/demo/reset
+{
+  "account": {
+    "accountId": "rider-r-2048",
+    "status": "SUSPENDED",
+    "suspensionReason": "ABNORMAL_LOCATION",
+    "version": 1,
+    "updatedAt": "2026-08-31T18:15:32.307Z"
+  }
+}
+
+$ GET /v1/accounts/rider-r-2048
+{
+  "account": {
+    "accountId": "rider-r-2048",
+    "status": "SUSPENDED",
+    "suspensionReason": "ABNORMAL_LOCATION",
+    "version": 1,
+    "updatedAt": "2026-08-31T18:15:32.307Z"
+  }
+}
+
+$ POST /v1/appeals  (Idempotency-Key: appeal-ik-1)
+{
+  "receipt": {
+    "receiptId": "receipt-0126ea4e-85eb-42b5-a10a-10e517ca8eb2",
+    "actionType": "SUBMIT_APPEAL",
+    "requestHash": "4caa1a3deeb235f9bc84b013f89672ffddde540e2efbb77477750fa004cee221",
+    "responseHash": "08718c60400fa0b170893179ee492d5fc28a18f890d93ede5448679b10d300ea",
+    "platformState": "SUPPLEMENT_REQUESTED",
+    "platformSequence": 1,
+    "receivedAt": "2026-08-31T18:15:32.328Z"
+  },
+  "appeal": {
+    "appealId": "appeal-324336e6-28d4-4a2e-b20b-c1c4d91efad1",
+    "caseId": "case-r-2048",
+    "accountId": "rider-r-2048",
+    "allegationType": "ABNORMAL_LOCATION",
+    "claimIds": [
+      "claim-location-handoff"
+    ],
+    "status": "SUPPLEMENT_REQUESTED",
+    "requestedSupplement": {
+      "artifactKind": "DEVICE_LOG",
+      "requiredFields": [
+        "occurredAt",
+        "networkFrom",
+        "networkTo",
+        "reason"
+      ],
+      "template": "DEVICE_NETWORK_HANDOFF_V1"
+    },
+    "submittedAt": "2026-08-31T18:15:32.327Z",
+    "updatedAt": "2026-08-31T18:15:32.327Z",
+    "version": 1,
+    "latestReceiptId": "receipt-0126ea4e-85eb-42b5-a10a-10e517ca8eb2"
+  },
+  "outboundEvent": {
+    "externalEventId": "event-7eda9e79-fcf3-4fe9-afe2-97d58a42a588",
+    "type": "SUPPLEMENT_REQUESTED",
+    "caseId": "case-r-2048",
+    "accountId": "rider-r-2048",
+    "appealId": "appeal-324336e6-28d4-4a2e-b20b-c1c4d91efad1",
+    "platformSequence": 1,
+    "occurredAt": "2026-08-31T18:15:32.327Z",
+    "bodyHash": "52bd3ad91b28765c8d4ed65e9a2dfc2d6d8efee645029e5ef4da43b4fd9f899f"
+  },
+  "replayed": false
+}
+
+$ GET /v1/actions/by-idempotency/appeal-ik-1
+{
+  "actionType": "SUBMIT_APPEAL",
+  "requestHash": "f5ffcd0f50d661a8b35d8225ac7ec9ea9c1cb24842f251595ab546ddbfe74856",
+  "receipt": {
+    "receiptId": "receipt-0126ea4e-85eb-42b5-a10a-10e517ca8eb2",
+    "actionType": "SUBMIT_APPEAL",
+    "requestHash": "4caa1a3deeb235f9bc84b013f89672ffddde540e2efbb77477750fa004cee221",
+    "responseHash": "08718c60400fa0b170893179ee492d5fc28a18f890d93ede5448679b10d300ea",
+    "platformState": "SUPPLEMENT_REQUESTED",
+    "platformSequence": 1,
+    "receivedAt": "2026-08-31T18:15:32.328Z"
+  },
+  "response": {
+    "receipt": {
+      "receiptId": "receipt-0126ea4e-85eb-42b5-a10a-10e517ca8eb2",
+      "actionType": "SUBMIT_APPEAL",
+      "requestHash": "4caa1a3deeb235f9bc84b013f89672ffddde540e2efbb77477750fa004cee221",
+      "responseHash": "08718c60400fa0b170893179ee492d5fc28a18f890d93ede5448679b10d300ea",
+      "platformState": "SUPPLEMENT_REQUESTED",
+      "platformSequence": 1,
+      "receivedAt": "2026-08-31T18:15:32.328Z"
+    },
+    "appeal": {
+      "appealId": "appeal-324336e6-28d4-4a2e-b20b-c1c4d91efad1",
+      "caseId": "case-r-2048",
+      "accountId": "rider-r-2048",
+      "allegationType": "ABNORMAL_LOCATION",
+      "claimIds": [
+        "claim-location-handoff"
+      ],
+      "status": "SUPPLEMENT_REQUESTED",
+      "requestedSupplement": {
+        "artifactKind": "DEVICE_LOG",
+        "requiredFields": [
+          "occurredAt",
+          "networkFrom",
+          "networkTo",
+          "reason"
+        ],
+        "template": "DEVICE_NETWORK_HANDOFF_V1"
+      },
+      "submittedAt": "2026-08-31T18:15:32.327Z",
+      "updatedAt": "2026-08-31T18:15:32.327Z",
+      "version": 1,
+      "latestReceiptId": "receipt-0126ea4e-85eb-42b5-a10a-10e517ca8eb2"
+    },
+    "outboundEvent": {
+      "externalEventId": "event-7eda9e79-fcf3-4fe9-afe2-97d58a42a588",
+      "type": "SUPPLEMENT_REQUESTED",
+      "caseId": "case-r-2048",
+      "accountId": "rider-r-2048",
+      "appealId": "appeal-324336e6-28d4-4a2e-b20b-c1c4d91efad1",
+      "platformSequence": 1,
+      "occurredAt": "2026-08-31T18:15:32.327Z",
+      "bodyHash": "52bd3ad91b28765c8d4ed65e9a2dfc2d6d8efee645029e5ef4da43b4fd9f899f"
+    }
+  }
+}
+
+$ POST /v1/appeals/appeal-324336e6-28d4-4a2e-b20b-c1c4d91efad1/supplements  (Idempotency-Key: supplement-ik-1)
+{
+  "receipt": {
+    "receiptId": "receipt-16c668f8-fcaf-43fa-9674-03280f59225f",
+    "actionType": "SUBMIT_SUPPLEMENT",
+    "requestHash": "efdeb25da63b5c35e9b86dfd013e1b1be72b9f11acaa302cdac6c8b5be8f1e4f",
+    "responseHash": "eeca966641d9ad63535eb65bba13a190cb36e76007ccd3c71a97a5efb1338ce7",
+    "platformState": "APPROVED",
+    "platformSequence": 2,
+    "receivedAt": "2026-08-31T18:15:32.349Z"
+  },
+  "appeal": {
+    "appealId": "appeal-324336e6-28d4-4a2e-b20b-c1c4d91efad1",
+    "caseId": "case-r-2048",
+    "accountId": "rider-r-2048",
+    "allegationType": "ABNORMAL_LOCATION",
+    "claimIds": [
+      "claim-location-handoff"
+    ],
+    "status": "APPROVED",
+    "requestedSupplement": {
+      "artifactKind": "DEVICE_LOG",
+      "requiredFields": [
+        "occurredAt",
+        "networkFrom",
+        "networkTo",
+        "reason"
+      ],
+      "template": "DEVICE_NETWORK_HANDOFF_V1"
+    },
+    "submittedAt": "2026-08-31T18:15:32.327Z",
+    "updatedAt": "2026-08-31T18:15:32.349Z",
+    "version": 2,
+    "latestReceiptId": "receipt-16c668f8-fcaf-43fa-9674-03280f59225f",
+    "decisionReason": "Device log confirms a cellular-network handoff during a legitimate delivery"
+  },
+  "account": {
+    "accountId": "rider-r-2048",
+    "status": "ACTIVE",
+    "suspensionReason": null,
+    "version": 2,
+    "updatedAt": "2026-08-31T18:15:32.349Z"
+  },
+  "outboundEvent": {
+    "externalEventId": "event-16c22f8f-d22e-4a23-9fe5-8fc812c2264e",
+    "type": "DECISION_APPROVED",
+    "caseId": "case-r-2048",
+    "accountId": "rider-r-2048",
+    "appealId": "appeal-324336e6-28d4-4a2e-b20b-c1c4d91efad1",
+    "platformSequence": 2,
+    "occurredAt": "2026-08-31T18:15:32.349Z",
+    "bodyHash": "a9de7d17ed7b7c5760aeae918973bb2b3e5a5b9144fc07e83f3def17422b601b"
+  },
+  "replayed": false
+}
+
+$ GET /v1/accounts/rider-r-2048  (direct status verification)
+{
+  "account": {
+    "accountId": "rider-r-2048",
+    "status": "ACTIVE",
+    "suspensionReason": null,
+    "version": 2,
+    "updatedAt": "2026-08-31T18:15:32.349Z"
+  }
+}
+
+$ POST .../supplements (replay same idempotency key)
+{
+  "replayed": true,
+  "receiptId": "receipt-16c668f8-fcaf-43fa-9674-03280f59225f",
+  "appealStatus": "APPROVED",
+  "accountStatus": "ACTIVE"
+}

@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Design approved. The first implementation slice is working.** MockDrop now has a local Node.js API, deterministic appeal rule, Dockerfile, in-process receipts, and seven passing integration tests. The AppealOS ADK runtime, persistence, Pub/Sub connection, UI, and Google Cloud deployment have not been implemented yet.
+**Rescue slice live on Google Cloud.** MockDrop and the AppealOS ADK rescue runtime are both deployed to Cloud Run and verified end-to-end. The demo reaches `ACCOUNT_ACTIVE` through the required `reset → notice → consent → mandate → submit → supplement → verify` path. Firestore persistence, Pub/Sub event delivery, the Evidence Vault, and the UI remain planned.
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
@@ -48,7 +48,7 @@ The deterministic demo reveals that a cellular-network handoff was mistaken for 
 
 ## Implemented now
 
-The first milestone proves the external platform state machine locally:
+The current slice proves the external platform state machine locally and on Cloud Run:
 
 ```text
 SUSPENDED
@@ -67,22 +67,67 @@ MockDrop currently provides:
 - an optional local bearer-token guard for write routes;
 - seven HTTP integration tests using Node's built-in test runner.
 
-Run the verified slice:
+AppealOS currently provides:
+
+- a FastAPI service with a real Google ADK root agent (`appeal_runtime_agent`, `google-adk==2.8.0`);
+- real Vertex AI calls to `gemini-3.5-flash` at the `global` endpoint;
+- deterministic notice validation, citation validation, mandate scope, supplement-cycle guard, and direct account-state verification;
+- a typed HTTP adapter to MockDrop;
+- a one-request `/demo/run` binding demo returning `ACCOUNT_ACTIVE`.
+
+Deployed Cloud Run URLs:
+
+- MockDrop: https://mockdrop-agrdlgr4ea-uc.a.run.app
+- AppealOS: https://appealos-agrdlgr4ea-uc.a.run.app
+
+Deployment logs, reproducible commands, and runtime evidence: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+## Spin-up
+
+### MockDrop
+
+Prerequisites: Node.js >= 22.
 
 ```bash
+npm install
 npm run check
 npm test
 npm run start:mockdrop
 ```
 
-See [apps/mockdrop/README.md](apps/mockdrop/README.md) for the current API contract.
+`npm run check` runs the MockDrop workspace check, `npm test` runs the seven HTTP integration tests, and `npm run start:mockdrop` starts the local MockDrop API. See [apps/mockdrop/README.md](apps/mockdrop/README.md) for the current API contract and available routes.
+
+### AppealOS
+
+Prerequisites: Python 3.12+ and `gcloud` authenticated to a project with Vertex AI enabled.
+
+```bash
+cd apps/appealos
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
+```
+
+Run the full binding demo:
+
+```bash
+curl -X POST http://localhost:8080/demo/run -H 'content-type: application/json'
+```
+
+Expected final state: `ACCOUNT_ACTIVE`. See [apps/appealos/README.md](apps/appealos/README.md) for the step-by-step API.
+
+### Redeploy
+
+The exact `gcloud run deploy` commands for both services are recorded in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Why it is agentic
 
 AppealOS is not organized around a chat box. Its value comes from durable state and external action:
 
 - **Background execution:** the case continues after approval without repeated prompts.
-- **Tool use:** the ADK agent reads approved artifacts, queries policy, writes to MockDrop, receives Pub/Sub events, and verifies status.
+- **Tool use:** the ADK root agent interprets notices and drafts grounded claims; deterministic code performs MockDrop writes, mandate guards, and status verification.
 - **Memory:** Firestore is the durable authority for the case, mandate, receipts, and event history.
 - **Scoped autonomy:** an `AppealMandate` limits destination, evidence, actions, supplement count, and expiry.
 - **Verifiable progress:** `SUBMITTED`, `ACKNOWLEDGED`, `APPROVED`, and `ACCOUNT_ACTIVE` are different events.
@@ -116,6 +161,8 @@ flowchart LR
     A --> L["Cloud Logging · redacted traces"]
 ```
 
+Rendered architecture asset: [PNG](docs/assets/appealos-architecture.png) · [SVG](docs/assets/appealos-architecture.svg).
+
 The binding rescue build may implement only the MockDrop platform-events topic and the demonstrated supplement path. Deferred components must remain labeled as planned until verified in the deployed revision.
 
 ## Gemini, ADK, and deterministic code
@@ -132,16 +179,48 @@ The model is not allowed to authorize actions or write case state. Deterministic
 - idempotency and event deduplication;
 - final external account-state verification.
 
-The exact eligible Gemini model ID, endpoint, region, and ADK version must be recorded after the first deployment smoke test. An older model is not an acceptable fallback.
+The first deployment smoke test recorded:
+
+- Gemini model ID: `gemini-3.5-flash`
+- Backend: Vertex AI, `global` endpoint
+- Google ADK version: `google-adk==2.8.0`
+
+An older model is not an acceptable fallback.
 
 ## Documentation
 
 - [Product Requirements Document](docs/PRD.md): users, scope, requirements, acceptance criteria, and release gates.
 - [Technical Design](docs/TECHNICAL_DESIGN.md): architecture, contracts, data model, state machine, security, and delivery plan.
+- [Deployment evidence](docs/DEPLOYMENT.md): live Cloud Run URLs, commands, logs, and planned-vs-implemented notes.
 
 The approved interaction sketch is included below.
 
 ![AppealOS three-stage interaction wireframe](docs/assets/appealos-runtime-wireframe.png)
+
+## Submission / Devpost
+
+The Devpost submission draft — bilingual text for every required field, a submission checklist, link summary, and engineer/designer backfill placeholders — lives in [SUBMISSION.md](SUBMISSION.md).
+
+- Primary track: **The Taskmaster**.
+- `Technologies used` must name **Gemini 3.5+**, **Google ADK**, and **Cloud Run**; MockDrop is a synthetic simulation platform.
+- Deployed origin URLs: https://appealos-agrdlgr4ea-uc.a.run.app and https://mockdrop-agrdlgr4ea-uc.a.run.app. Exact model/framework versions are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+- If this section conflicts with another README edit, `SUBMISSION.md` is authoritative for Devpost facts.
+
+Supporting deliverables: [demo script outline](docs/DEMO_SCRIPT.md) and [bonus social posts](docs/SOCIAL_POSTS.md).
+
+## Submission assets
+
+Devpost visual and demo deliverables live in [`submission/`](submission/):
+
+- [Storyboard + narration script](submission/STORYBOARD.md)
+- [Demo video, 1280×720 MP4, 3:58](submission/demo-video.mp4) — English narration with burned-in English subtitles
+- [English subtitles](submission/demo-subtitles-en.srt) and [Simplified Chinese subtitles](submission/demo-subtitles-zh.srt)
+- [Devpost 16:9 cover, 1920×1080](submission/devpost-cover-1920x1080.png)
+- [Architecture diagram PNG](submission/assets/appealos-architecture.png) and [SVG](submission/assets/appealos-architecture.svg)
+- UI/flow screenshots in [`submission/screenshots/`](submission/screenshots/)
+- [Local MockDrop API transcript](submission/mockdrop-api-transcript.txt)
+
+The GCP running-evidence segment now has live `.run.app` URLs, Cloud Run deploy logs, and Vertex AI/ADK runtime log excerpts in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Planned repository shape
 
@@ -153,13 +232,13 @@ The approved interaction sketch is included below.
 │   ├── TECHNICAL_DESIGN.md
 │   └── assets/
 ├── apps/
-│   ├── appealos/       # proposed FastAPI + ADK + compiled React service
-│   └── mockdrop/       # implemented local fictional platform API
+│   ├── appealos/       # implemented FastAPI + ADK rescue runtime
+│   └── mockdrop/       # implemented fictional platform API
 ├── fixtures/           # proposed synthetic notice, policy, and evidence
 └── tests/              # proposed state, mandate, adapter, and security tests
 ```
 
-`apps/mockdrop` exists today. `apps/appealos`, encrypted fixture packaging, Cloud persistence, and infrastructure directories remain implementation targets.
+`apps/mockdrop` and `apps/appealos` exist today. Encrypted fixture packaging, Cloud persistence, Pub/Sub, and the compiled React UI remain implementation targets.
 
 ## Safety boundaries
 
@@ -183,4 +262,6 @@ The approved interaction sketch is included below.
 
 ## License and contributions
 
-No license has been selected yet. Until a license is added, all rights are reserved. Contribution guidance will be added after the first working demo.
+MIT © 2026 AppealOS Contributors. See [LICENSE](LICENSE).
+
+Contribution guidance will be added after the first working demo.
