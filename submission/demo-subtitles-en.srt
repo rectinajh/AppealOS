@@ -107,21 +107,29 @@ Firestore is the durable workflow authority. Cloud Storage holds encrypted synth
 Pub/Sub carries the supplement event from MockDrop back to the runtime, and Cloud Logging keeps redacted traces.
 
 28
-00:03:26,300 --> 00:03:37,371
-For the deployed revision, this segment will show the backend running on Google Cloud: the live Cloud Run service URL, the running revision, and the logged request path in Cloud Logging and Vertex AI.
+00:03:27,250 --> 00:03:30,400
+Here is the deployed backend on Google Cloud.
 
 29
-00:03:37,451 --> 00:03:41,980
-This slot is reserved until the deployment evidence from the engineering task is available.
+00:03:30,400 --> 00:03:34,900
+AppealOS and MockDrop run as separate Cloud Run services, each serving one hundred percent of traffic.
 
 30
-00:03:42,280 --> 00:03:50,645
-AppealOS is a synthetic proof of concept. It never promises reinstatement, and every claim stays inside user-approved scope.
+00:03:34,900 --> 00:03:38,900
+The verified demo returned ACCOUNT_ACTIVE, with Gemini ready on Vertex AI
 
 31
+00:03:38,900 --> 00:03:42,400
+and the request path logged end-to-end.
+
+32
+00:03:42,400 --> 00:03:50,645
+AppealOS is a synthetic proof of concept. It never promises reinstatement, and every claim stays inside user-approved scope.
+
+33
 00:03:50,725 --> 00:03:54,442
 One approval. One authorized supplement. One verified outcome.
 
-32
+34
 00:03:54,522 --> 00:03:58,130
 AppealOS: a digital advocate for an algorithmic world.

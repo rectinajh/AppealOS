@@ -16,12 +16,12 @@
 | 7 | 2:18–2:36 | UI screenshot 3 — live action timeline + receipts | "Every external write produces a durable receipt. Replaying the supplement event causes no duplicate platform action." | Demo — receipts before celebration |
 | 8 | 2:36–2:52 | UI screenshot 4 — outcome: ACCOUNT_ACTIVE + Due Process Audit Export | "Only after a separate status call returns ACTIVE does AppealOS close the case — and the user downloads a redacted, hash-consistent audit export." | Demo — verified outcome + export |
 | 9 | 2:52–3:12 | Architecture diagram (final SVG/PNG) | "Under the hood: Cloud Run hosts the ADK runtime and UI, Gemini handles structured extraction and drafting, deterministic code enforces mandates and idempotency, Firestore holds case state, and Pub/Sub carries the supplement event from MockDrop." | Architecture — Google Cloud |
-| 10 | 3:12–3:40 | GCP evidence slot: Cloud Run dashboard / `.run.app` URL / Vertex AI logs / Console | "Here is the deployed backend on Google Cloud — the Cloud Run service URL, the running revision, and the logged request path." | GCP evidence — PENDING until CMP-16 |
-| 11 | 3:40–3:58 | Safety + synthetic-data disclaimer, close | "AppealOS is a synthetic proof of concept. It never promises reinstatement, and every claim stays inside user-approved scope. One approval. One authorized supplement. One verified outcome." | Synthetic data · no real platform integration |
+| 10 | 3:26–3:42 | GCP evidence: live Cloud Run service cards (`.run.app` URLs + revisions + 100% traffic), verified end-to-end timeline, Vertex AI runtime logs | "Here is the deployed backend on Google Cloud. AppealOS and MockDrop run as separate Cloud Run services, each serving one hundred percent of traffic. The verified demo returned ACCOUNT_ACTIVE, with Gemini ready on Vertex AI and the request path logged end-to-end." | GCP evidence — live (CMP-16) |
+| 11 | 3:42–3:58 | Safety + synthetic-data disclaimer, close | "AppealOS is a synthetic proof of concept. It never promises reinstatement, and every claim stays inside user-approved scope. One approval. One authorized supplement. One verified outcome." | Synthetic data · no real platform integration |
 
 ## Recording notes
 
 - Slides 1–3, 9–11 are static/ken-burns slide cards rendered from HTML/CSS.
 - Slides 4–8 use `submission/screenshots/*.png` with subtle zoom/pan.
-- GCP segment (slide 10) is a clearly labeled placeholder; replace its visual + narration with real Cloud Run dashboard / `.run.app` URL / Vertex AI logs from CMP-16 when available.
+- GCP segment (slide 10) now uses live Cloud Run evidence from CMP-16: `.run.app` service URLs, deployed revisions, the verified `ACCOUNT_ACTIVE` timeline, and Vertex AI runtime log excerpts from `docs/DEPLOYMENT.md`.
 - If engineering deploys before deadline, replace the local MockDrop terminal shots (slide 6) with the deployed `.run.app` sequence and re-render only affected segments.
