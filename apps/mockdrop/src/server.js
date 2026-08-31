@@ -61,7 +61,10 @@ export function createMockDropServer({
     const requestUrl = new URL(request.url, "http://localhost");
 
     try {
-      if (request.method === "GET" && requestUrl.pathname === "/healthz") {
+      if (
+        request.method === "GET" &&
+        (requestUrl.pathname === "/health" || requestUrl.pathname === "/healthz")
+      ) {
         return json(response, 200, { status: "ok", service: "mockdrop" });
       }
 

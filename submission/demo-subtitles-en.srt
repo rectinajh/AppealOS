@@ -39,97 +39,81 @@ It reads the notice, identifies the allegation and the deadline, inspects only u
 After one scoped Appeal Mandate, the agent submits, handles one authorized supplement, tracks the response, and verifies a clear result: restored, rejected, or human escalation.
 
 11
-00:01:12,430 --> 00:01:18,370
-Here is the live case workspace, running on Cloud Run. A MockDrop rider is suspended for abnormal location.
+00:01:13,200 --> 00:01:20,140
+Here is the live case workspace, running on Cloud Run. A MockDrop rider has been suspended for abnormal location.
 
 12
-00:01:19,270 --> 00:01:29,950
-AppealOS extracts the allegation, the incident window, and the deadline, and shows exactly three synthetic evidence artifacts: a delivery receipt, a GPS trace, and a device log.
+00:01:21,500 --> 00:01:26,300
+Reset creates a fresh synthetic case and loads three consent-gated evidence artifacts.
 
 13
-00:01:30,850 --> 00:01:38,490
-The user grants analysis consent first. Analysis means building the timeline and drafting claims. It does not disclose anything to the platform.
+00:01:28,000 --> 00:01:33,950
+AppealOS parses the notice, extracts the allegation, the incident window, and the deadline.
 
 14
-00:01:39,390 --> 00:01:46,900
-Next, the agent compiles grounded claim units. Every claim carries artifact citations, a source span, and a confidence result.
+00:01:38,500 --> 00:01:45,350
+The user grants analysis consent first. Analysis builds the timeline and drafts claims without disclosing anything.
 
 15
-00:01:47,800 --> 00:01:57,950
-The user reviews one scoped Appeal Mandate: a single recipient, named claims, allowed evidence, one supplement cycle, polling, verification, and a seventy-two-hour expiry.
+00:01:46,000 --> 00:02:00,090
+Next, the agent compiles grounded claim units and asks for one scoped Appeal Mandate: a single recipient, named claims, allowed evidence, one supplement cycle, polling, verification, and a seventy-two-hour expiry.
 
 16
-00:01:58,850 --> 00:02:02,990
-Any new claim, new recipient, or new evidence class requires a new mandate.
+00:02:02,000 --> 00:02:05,560
+The mandate is approved. The agent is now cleared to execute.
 
 17
-00:02:03,890 --> 00:02:09,090
-After one approval, the agent submits the initial appeal through a typed adapter with an idempotency key.
+00:02:06,000 --> 00:02:13,220
+One Execute click submits the appeal, answers the supplement request with the authorized device log, and verifies the account.
 
 18
-00:02:09,990 --> 00:02:14,040
-MockDrop accepts the appeal and publishes a supplement request for the device log.
+00:02:15,000 --> 00:02:20,710
+Every external write leaves a receipt. The timeline ends with DECISION_APPROVED and ACCOUNT_STATUS_ACTIVE.
 
 19
-00:02:14,940 --> 00:02:23,820
-Because the device log is already inside the mandate, AppealOS supplies it automatically, with no second user prompt. The account transitions from suspended to active.
+00:02:23,000 --> 00:02:28,230
+Replay of the supplement is idempotent, so no duplicate platform action is produced.
 
 20
-00:02:24,720 --> 00:02:31,200
-Every external write leaves a durable receipt. Submission, acknowledgement, supplement, and decision are distinct events.
+00:02:31,000 --> 00:02:34,970
+The user can download a redacted, hash-chained due-process export.
 
 21
-00:02:32,100 --> 00:02:39,640
-Replaying the supplement event produces no duplicate platform action, because the idempotency key and request hash are checked by deterministic code.
-
-22
-00:02:40,540 --> 00:02:47,900
-AppealOS never equates approval text with restored access. Only after a direct account-status call returns active does it close the case.
-
-23
-00:02:48,800 --> 00:02:57,340
-The user can then download a redacted, hash-consistent due-process audit export. The record excludes raw evidence, coordinates, keys, and tokens.
-
-24
-00:02:58,810 --> 00:03:04,690
+00:02:40,400 --> 00:02:46,090
 Under the hood, the AppealOS UI and ADK runtime run on Cloud Run.
 
-25
-00:03:04,770 --> 00:03:12,912
+22
+00:02:46,170 --> 00:02:54,312
 Gemini handles structured notice extraction, evidence relevance, and grounded drafting. Deterministic code enforces deadlines, mandate scope, and idempotency.
 
-26
-00:03:12,992 --> 00:03:18,420
+23
+00:02:54,392 --> 00:02:59,820
 Firestore is the durable workflow authority. Cloud Storage holds encrypted synthetic evidence.
 
-27
-00:03:18,500 --> 00:03:26,000
+24
+00:02:59,900 --> 00:03:07,400
 Pub/Sub carries the supplement event from MockDrop back to the runtime, and Cloud Logging keeps redacted traces.
 
-28
-00:03:27,250 --> 00:03:30,400
+25
+00:03:08,000 --> 00:03:10,340
 Here is the deployed backend on Google Cloud.
 
-29
-00:03:30,400 --> 00:03:34,900
+26
+00:03:10,700 --> 00:03:16,750
 AppealOS and MockDrop run as separate Cloud Run services, each serving one hundred percent of traffic.
 
-30
-00:03:34,900 --> 00:03:38,900
-The verified demo returned ACCOUNT_ACTIVE, with Gemini ready on Vertex AI
+27
+00:03:17,500 --> 00:03:25,910
+The verified demo returned ACCOUNT_ACTIVE, with nine timeline events, timeline integrity verified, and Gemini ready on Vertex AI.
 
-31
-00:03:38,900 --> 00:03:42,400
-and the request path logged end-to-end.
-
-32
-00:03:42,400 --> 00:03:50,645
+28
+00:03:27,600 --> 00:03:35,745
 AppealOS is a synthetic proof of concept. It never promises reinstatement, and every claim stays inside user-approved scope.
 
-33
-00:03:50,725 --> 00:03:54,442
+29
+00:03:35,825 --> 00:03:39,542
 One approval. One authorized supplement. One verified outcome.
 
-34
-00:03:54,522 --> 00:03:58,130
+30
+00:03:39,622 --> 00:03:43,230
 AppealOS: a digital advocate for an algorithmic world.

@@ -10,15 +10,17 @@ Current deploy: CMP-25 — latest `6b891aa` source redeployed to Cloud Run after
 
 | Service | Cloud Run URL | Region | Project |
 |---|---|---|---|
-| MockDrop | https://mockdrop-606769518273.us-central1.run.app | us-central1 | boxwood-scope-364905 |
+| MockDrop | https://mockdrop-agrdlgr4ea-uc.a.run.app | us-central1 | boxwood-scope-364905 |
 | AppealOS | https://appealos-606769518273.us-central1.run.app | us-central1 | boxwood-scope-364905 |
 
 Project number: `606769518273`. Both services are `generation 1`, serving 100% of traffic.
 
+`gcloud run deploy` reports MockDrop as `https://mockdrop-606769518273.us-central1.run.app`; `gcloud run services describe` reports the canonical `https://mockdrop-agrdlgr4ea-uc.a.run.app`. Both URLs resolve to the same service.
+
 Latest verified revisions (2026-09-01):
 
 - AppealOS: `appealos-00004-9cb`, `https://appealos-606769518273.us-central1.run.app`
-- MockDrop: `mockdrop-00002-l26`, `https://mockdrop-606769518273.us-central1.run.app`
+- MockDrop: `mockdrop-00003-77m`, `https://mockdrop-agrdlgr4ea-uc.a.run.app` (deploy alias `https://mockdrop-606769518273.us-central1.run.app`)
 
 AppealOS serves the upgraded dark glassmorphism case workspace UI at `/` with `APPEALOS_STORE_BACKEND=firestore`. The UI is self-contained (inline CSS/JS/SVG) with animated flow controls, status timeline, confirm/loading/success interactions, expandable evidence cards, and outcome export; it uses no external CDN or framework.
 
@@ -98,7 +100,7 @@ Building Container..............................................................
 Setting IAM Policy..................................done
 Creating Revision..................................................done
 Routing traffic.....done
-Service [mockdrop] revision [mockdrop-00002-l26] has been deployed and is serving 100 percent of traffic.
+Service [mockdrop] revision [mockdrop-00003-77m] has been deployed and is serving 100 percent of traffic.
 Service URL: https://mockdrop-606769518273.us-central1.run.app
 ```
 
@@ -178,9 +180,10 @@ On 2026-09-01 the workspace was redeployed as revision `appealos-00003-hwk`.
 
 On 2026-09-01 the repository `main` HEAD `6b891aa` was redeployed after a focused review.
 
-- MockDrop revision: `mockdrop-00002-l26` at `https://mockdrop-606769518273.us-central1.run.app`.
+- MockDrop revision: `mockdrop-00003-77m` at `https://mockdrop-agrdlgr4ea-uc.a.run.app` (deploy alias `https://mockdrop-606769518273.us-central1.run.app`).
 - AppealOS revision: `appealos-00004-9cb` at `https://appealos-606769518273.us-central1.run.app`.
-- `GET /health` returned `{"status":"ok","revision":"appealos-00004-9cb","storeBackend":"firestore","pubsubOidcVerification":false}`.
+- AppealOS `GET /health` returned `{"status":"ok","revision":"appealos-00004-9cb","storeBackend":"firestore","pubsubOidcVerification":false}`.
+- MockDrop `GET /health` returned `{"status":"ok","service":"mockdrop"}` on the Cloud Run revision; `/healthz` remains local-only because Cloud Run intercepts that path.
 - `GET /` returned HTTP 200 and `<title>AppealOS · Case Workspace</title>`.
 - `POST /demo/run` returned `final_state=ACCOUNT_ACTIVE` with nine timeline events and `timelineIntegrity.verified=true`.
 
@@ -188,5 +191,6 @@ Optimizations applied before deploy:
 
 - MockDrop no longer republishes an outbound Pub/Sub event when an idempotency key is replayed.
 - AppealOS Pub/Sub supplement handling now acknowledges `SUPPLEMENT_REQUESTED` when the case is already `ACCOUNT_ACTIVE` and can resume from `DECIDED_APPROVED`, preventing retry-time 409 loops after a dedupe-write failure.
+- MockDrop now exposes a Cloud Run-compatible `GET /health` endpoint (in addition to the local `/healthz` path).
 
 Pub/Sub topic wiring and OIDC enforcement remain planned, not deployed.

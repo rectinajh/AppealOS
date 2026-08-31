@@ -111,6 +111,12 @@ describe("MockDrop API", () => {
     assert.equal(account.payload.account.version, 2);
   });
 
+  test("exposes a Cloud Run-compatible /health endpoint", async () => {
+    const health = await request("GET", "/health");
+    assert.equal(health.response.status, 200);
+    assert.deepEqual(health.payload, { status: "ok", service: "mockdrop" });
+  });
+
   test("replays an identical initial appeal without creating another appeal", async () => {
     const first = await submitAppeal("same-appeal-key");
     const replay = await submitAppeal("same-appeal-key");

@@ -33,7 +33,8 @@ It also covers identical-request replay, conflicting idempotency-key reuse, supp
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/healthz` | Health check |
+| `GET` | `/health` | Health check (Cloud Run compatible) |
+| `GET` | `/healthz` | Health check (local compatibility) |
 | `POST` | `/v1/demo/reset` | Reset the synthetic rider to `SUSPENDED` |
 | `GET` | `/v1/accounts/{accountId}` | Read the rider's external account state |
 | `POST` | `/v1/appeals` | Submit the initial appeal |

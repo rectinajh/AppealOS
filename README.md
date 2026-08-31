@@ -16,7 +16,7 @@
 
 ## Project status
 
-**Rescue slice live on Google Cloud; award-readiness upgrade deployed and verified.** The live revisions (`appealos-00004-9cb`, `mockdrop-00002-l26`) prove real Gemini 3.5 Flash calls through Google ADK, two Cloud Run services, Firestore persistence, typed MockDrop writes, strict artifact/destination/expiry checks, case recovery by ID, an explicit Pub/Sub push route, a hash-chained timeline, and one approved execution call that returns `ACCOUNT_ACTIVE`. The Evidence Vault and deployed Pub/Sub/OIDC wiring remain planned.
+**Rescue slice live on Google Cloud; award-readiness upgrade deployed and verified.** The live revisions (`appealos-00004-9cb`, `mockdrop-00003-77m`) prove real Gemini 3.5 Flash calls through Google ADK, two Cloud Run services, Firestore persistence, typed MockDrop writes, strict artifact/destination/expiry checks, case recovery by ID, an explicit Pub/Sub push route, a hash-chained timeline, and one approved execution call that returns `ACCOUNT_ACTIVE`. The Evidence Vault and deployed Pub/Sub/OIDC wiring remain planned.
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
@@ -108,7 +108,7 @@ AppealOS currently provides:
 
 Deployed Cloud Run URLs:
 
-- MockDrop (`mockdrop-00002-l26`): https://mockdrop-606769518273.us-central1.run.app
+- MockDrop (`mockdrop-00003-77m`): https://mockdrop-606769518273.us-central1.run.app
 - AppealOS (`appealos-00004-9cb`): https://appealos-606769518273.us-central1.run.app
 
 Deployment logs, reproducible commands, and runtime evidence: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
