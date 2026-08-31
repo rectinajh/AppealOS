@@ -1,0 +1,16 @@
+{
+  "name": "appealos",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "check": "npm run check --workspace @appealos/mockdrop",
+    "start:mockdrop": "npm run start --workspace @appealos/mockdrop",
+    "test": "npm run test --workspace @appealos/mockdrop"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

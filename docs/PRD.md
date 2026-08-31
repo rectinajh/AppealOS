@@ -7,7 +7,10 @@
 **Target:** All Things Agentic Hackathon MVP
 
 **Primary track:** The Taskmaster
+
 **Data policy:** Synthetic fixtures only
+
+**Implementation status:** Local MockDrop API milestone complete; AppealOS runtime and cloud integration not started
 
 ## 1. Product summary
 

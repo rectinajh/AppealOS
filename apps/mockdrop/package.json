@@ -1,0 +1,15 @@
+{
+  "name": "@appealos/mockdrop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fictional delivery-platform API used to prove AppealOS external state mutation.",
+  "scripts": {
+    "check": "node --check src/canonical.js && node --check src/fixtures.js && node --check src/mockdrop-store.js && node --check src/server.js && node --check src/index.js",
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

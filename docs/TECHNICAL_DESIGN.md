@@ -5,13 +5,27 @@
 **Version:** 0.1
 
 **Scope:** Synthetic MockDrop hackathon MVP
+
 **Source of product requirements:** [PRD.md](PRD.md)
 
 ## 1. Design objective
 
 Build a tool-using Agent that can carry one appeal from a synthetic suspension notice to a directly verified external account state. The architecture must make user authority, model uncertainty, side effects, receipts, and retries explicit.
 
-This document specifies proposed interfaces. No application code exists at the time of writing. A component becomes “implemented” only after its deployed smoke test passes and the README is updated.
+This document specifies the target architecture and records the current implementation state. A component becomes “implemented” only after its verification passes and the README is updated.
+
+## Implementation status
+
+| Component | Status | Evidence |
+|---|---|---|
+| MockDrop domain and HTTP API | Implemented locally | `apps/mockdrop/src`; deterministic appeal and account transitions |
+| MockDrop idempotency and receipt recovery | Implemented locally | Seven passing HTTP integration tests |
+| MockDrop container | Implemented, not deployed | `apps/mockdrop/Dockerfile` |
+| MockDrop Firestore persistence | Planned | Current store is in-memory |
+| Cloud Run OIDC | Planned | Current write guard is an optional local bearer token |
+| Pub/Sub event publication | Planned | Current API returns the proposed outbound event in its response |
+| AppealOS ADK runtime and UI | Planned | No `apps/appealos` implementation yet |
+| Google Cloud deployment | Planned | No deployed revision yet |
 
 ## 2. Architecture decisions
 
@@ -66,7 +80,9 @@ Responsibilities:
 
 MockDrop is a cooperative simulated external platform, not a real integration or independent adjudicator.
 
-Responsibilities:
+The current local implementation uses Node.js built-in HTTP and an in-memory store. It implements all documented HTTP routes, deterministic approval/rejection, account activation, receipt lookup, and idempotent replay. It returns proposed outbound event payloads to its caller but does not publish Pub/Sub messages yet.
+
+Cloud target responsibilities:
 
 - persist the synthetic rider and appeal in a separate Firestore database;
 - accept only authenticated AppealOS service calls;

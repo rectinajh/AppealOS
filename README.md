@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Design approved. Implementation has not started.** This repository currently contains the product requirements and proposed technical design for the All Things Agentic Hackathon build.
+**Design approved. The first implementation slice is working.** MockDrop now has a local Node.js API, deterministic appeal rule, Dockerfile, in-process receipts, and seven passing integration tests. The AppealOS ADK runtime, persistence, Pub/Sub connection, UI, and Google Cloud deployment have not been implemented yet.
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
@@ -45,6 +45,37 @@ The hackathon scope is deliberately narrow:
 - one complete Agent action timeline.
 
 The deterministic demo reveals that a cellular-network handoff was mistaken for location fraud. AppealOS submits the case, receives a request for the device log, supplies it within the user's mandate, then calls MockDrop's account-status endpoint separately before declaring success.
+
+## Implemented now
+
+The first milestone proves the external platform state machine locally:
+
+```text
+SUSPENDED
+→ SUPPLEMENT_REQUESTED
+→ APPROVED
+→ ACTIVE
+```
+
+MockDrop currently provides:
+
+- reset, account, appeal, supplement, decision, and receipt-recovery APIs;
+- stable request and response hashes;
+- idempotent replay for initial appeals and supplements;
+- conflict detection when one idempotency key is reused with a different body;
+- valid-device-log and rejected-evidence paths;
+- an optional local bearer-token guard for write routes;
+- seven HTTP integration tests using Node's built-in test runner.
+
+Run the verified slice:
+
+```bash
+npm run check
+npm test
+npm run start:mockdrop
+```
+
+See [apps/mockdrop/README.md](apps/mockdrop/README.md) for the current API contract.
 
 ## Why it is agentic
 
@@ -123,12 +154,12 @@ The approved interaction sketch is included below.
 │   └── assets/
 ├── apps/
 │   ├── appealos/       # proposed FastAPI + ADK + compiled React service
-│   └── mockdrop/       # proposed fictional platform service
+│   └── mockdrop/       # implemented local fictional platform API
 ├── fixtures/           # proposed synthetic notice, policy, and evidence
 └── tests/              # proposed state, mandate, adapter, and security tests
 ```
 
-Only the documentation paths exist today. The application directories are the agreed implementation target.
+`apps/mockdrop` exists today. `apps/appealos`, encrypted fixture packaging, Cloud persistence, and infrastructure directories remain implementation targets.
 
 ## Safety boundaries
 
