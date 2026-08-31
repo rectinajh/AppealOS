@@ -4,6 +4,10 @@ Python FastAPI service that runs the AppealOS binding demo and a real Google ADK
 
 Deterministic domain code owns every state transition, mandate guard, idempotency key, and external MockDrop write. Gemini/ADK is called only for notice extraction, evidence relevance, and claim drafting.
 
+## Hosted workspace
+
+Deployed case workspace: https://appealos-agrdlgr4ea-uc.a.run.app/
+
 ## What is implemented
 
 - FastAPI service with a single ADK root agent (`google-adk==2.8.0`).
@@ -12,7 +16,7 @@ Deterministic domain code owns every state transition, mandate guard, idempotenc
 - Deterministic notice validation, citation validation, mandate scope, supplement cycle guard, and direct account-state verification.
 - Typed HTTP adapter for the deployed/local MockDrop service.
 - JSON stdout logs recording every Gemini/ADK call and MockDrop HTTP request.
-- A clickable single-page case workspace UI at `/` with a status timeline, consent/mandate controls, evidence cards, and outcome export.
+- A polished, dark glassmorphism single-page case workspace UI at `/` with an animated status timeline, two-step confirm states, loading/success motion, expandable evidence cards, and outcome export. No external CDN or framework is used, so the workspace works offline from the Cloud Run origin.
 
 ## Run locally
 

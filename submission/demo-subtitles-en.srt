@@ -39,55 +39,55 @@ It reads the notice, identifies the allegation and the deadline, inspects only u
 After one scoped Appeal Mandate, the agent submits, handles one authorized supplement, tracks the response, and verifies a clear result: restored, rejected, or human escalation.
 
 11
-00:01:12,230 --> 00:01:17,642
-Here is the case workspace. A MockDrop rider is suspended for abnormal location.
+00:01:12,430 --> 00:01:18,370
+Here is the live case workspace, running on Cloud Run. A MockDrop rider is suspended for abnormal location.
 
 12
-00:01:17,722 --> 00:01:28,962
+00:01:19,270 --> 00:01:29,950
 AppealOS extracts the allegation, the incident window, and the deadline, and shows exactly three synthetic evidence artifacts: a delivery receipt, a GPS trace, and a device log.
 
 13
-00:01:29,042 --> 00:01:38,090
+00:01:30,850 --> 00:01:38,490
 The user grants analysis consent first. Analysis means building the timeline and drafting claims. It does not disclose anything to the platform.
 
 14
-00:01:38,390 --> 00:01:46,937
+00:01:39,390 --> 00:01:46,900
 Next, the agent compiles grounded claim units. Every claim carries artifact citations, a source span, and a confidence result.
 
 15
-00:01:47,017 --> 00:01:57,362
+00:01:47,800 --> 00:01:57,950
 The user reviews one scoped Appeal Mandate: a single recipient, named claims, allowed evidence, one supplement cycle, polling, verification, and a seventy-two-hour expiry.
 
 16
-00:01:57,442 --> 00:02:03,180
+00:01:58,850 --> 00:02:02,990
 Any new claim, new recipient, or new evidence class requires a new mandate.
 
 17
-00:02:03,480 --> 00:02:09,844
+00:02:03,890 --> 00:02:09,090
 After one approval, the agent submits the initial appeal through a typed adapter with an idempotency key.
 
 18
-00:02:09,924 --> 00:02:14,791
+00:02:09,990 --> 00:02:14,040
 MockDrop accepts the appeal and publishes a supplement request for the device log.
 
 19
-00:02:14,871 --> 00:02:24,120
+00:02:14,940 --> 00:02:23,820
 Because the device log is already inside the mandate, AppealOS supplies it automatically, with no second user prompt. The account transitions from suspended to active.
 
 20
-00:02:24,420 --> 00:02:30,999
+00:02:24,720 --> 00:02:31,200
 Every external write leaves a durable receipt. Submission, acknowledgement, supplement, and decision are distinct events.
 
 21
-00:02:31,079 --> 00:02:40,260
+00:02:32,100 --> 00:02:39,640
 Replaying the supplement event produces no duplicate platform action, because the idempotency key and request hash are checked by deterministic code.
 
 22
-00:02:40,560 --> 00:02:49,728
+00:02:40,540 --> 00:02:47,900
 AppealOS never equates approval text with restored access. Only after a direct account-status call returns active does it close the case.
 
 23
-00:02:49,808 --> 00:02:58,510
+00:02:48,800 --> 00:02:57,340
 The user can then download a redacted, hash-consistent due-process audit export. The record excludes raw evidence, coordinates, keys, and tokens.
 
 24

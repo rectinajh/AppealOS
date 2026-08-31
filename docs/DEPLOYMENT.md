@@ -13,7 +13,7 @@ Follow-up: CMP-21 — Firestore persistence implemented and verified; Pub/Sub su
 
 Project number: `606769518273`. Both services are `generation 1`, serving 100% of traffic.
 
-Latest AppealOS revision: `appealos-00002-jzl` (2026-08-31). It serves the clickable single-page case workspace UI at `/` on both the alias URL above and the canonical Cloud Run URL `https://appealos-606769518273.us-central1.run.app`.
+Latest AppealOS revision: `appealos-00003-hwk` (2026-09-01). It serves the upgraded dark glassmorphism case workspace UI at `/` on both the alias URL above and the canonical Cloud Run URL `https://appealos-606769518273.us-central1.run.app`. The UI is self-contained (inline CSS/JS/SVG) with animated flow controls, status timeline, confirm/loading/success interactions, expandable evidence cards, and outcome export; it uses no external CDN or framework.
 
 ## Eligible model and framework
 
@@ -157,3 +157,10 @@ Status: code complete and covered by local unit tests; not yet deployed to Cloud
 - Real-platform adapters; the public MVP is synthetic MockDrop data only.
 
 Do not cite deployed Pub/Sub/OIDC or MockDrop Firestore as implemented in Devpost.
+
+## CMP-24 UI refresh verification
+
+On 2026-09-01 the workspace was redeployed as revision `appealos-00003-hwk`.
+
+- `GET /` returned HTTP 200 and the new `<title>AppealOS · Case Workspace</title>` page containing `flow-progress` and `confirm-mode` markers.
+- `POST /demo/run` returned `final_state=ACCOUNT_ACTIVE` with 9 timeline events.

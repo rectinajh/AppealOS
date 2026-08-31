@@ -3,60 +3,156 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
   <title>AppealOS · Case Workspace</title>
   <style>
     :root {
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --ink: #17233d;
-      --muted: #66738f;
-      --line: #e4e9f2;
-      --accent: #3b5bff;
-      --accent-soft: #eef1ff;
-      --ok: #0f9f6e;
-      --ok-soft: #e6f7f0;
-      --warn: #b7791f;
-      --warn-soft: #fff5e5;
-      --danger: #d64545;
-      --danger-soft: #fdecec;
-      --radius: 14px;
-      --shadow: 0 10px 30px rgba(23, 35, 61, 0.08);
+      --bg: #05080f;
+      --bg-2: #0a0f1d;
+      --panel: rgba(15, 23, 42, 0.72);
+      --panel-soft: rgba(255, 255, 255, 0.035);
+      --line: rgba(148, 163, 184, 0.16);
+      --line-strong: rgba(148, 163, 184, 0.3);
+      --text: #e6edf7;
+      --muted: #94a3b8;
+      --faint: #64748b;
+      --cyan: #22d3ee;
+      --violet: #8b5cf6;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #fb7185;
+      --radius: 20px;
+      --radius-sm: 14px;
+      --shadow: 0 24px 80px rgba(2, 6, 23, 0.48);
     }
 
     * { box-sizing: border-box; }
 
+    html, body { min-height: 100%; }
+
     body {
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      line-height: 1.45;
+      background:
+        radial-gradient(1100px 620px at 82% -10%, rgba(139, 92, 246, 0.22), transparent 56%),
+        radial-gradient(950px 560px at -12% 28%, rgba(34, 211, 238, 0.16), transparent 56%),
+        linear-gradient(158deg, #05080f 0%, #0a0f1d 52%, #05080f 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.5;
+      overflow-x: hidden;
     }
 
-    header {
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(76px);
+      opacity: 0.5;
+      mix-blend-mode: screen;
+      animation: float 18s ease-in-out infinite alternate;
+    }
+
+    .orb-1 { width: 520px; height: 520px; left: -140px; top: -180px; background: radial-gradient(circle, rgba(34, 211, 238, 0.52), transparent 70%); }
+    .orb-2 { width: 620px; height: 620px; right: -220px; top: 4%; background: radial-gradient(circle, rgba(139, 92, 246, 0.5), transparent 70%); animation-delay: -6s; }
+    .orb-3 { width: 440px; height: 440px; left: 26%; bottom: -260px; background: radial-gradient(circle, rgba(52, 211, 153, 0.32), transparent 70%); animation-delay: -11s; }
+
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+      background-size: 44px 44px;
+      -webkit-mask-image: radial-gradient(circle at 50% -10%, black, transparent 76%);
+      mask-image: radial-gradient(circle at 50% -10%, black, transparent 76%);
+    }
+
+    .topbar {
       position: sticky;
       top: 0;
-      z-index: 10;
-      padding: 16px 24px;
-      background: rgba(245, 247, 251, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--line);
+      z-index: 20;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(5, 8, 15, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
 
-    header h1 {
-      font-size: 18px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      flex: 0 0 auto;
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      color: #a5f3fc;
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(139, 92, 246, 0.24));
+      border: 1px solid var(--line-strong);
+      box-shadow: 0 0 26px rgba(34, 211, 238, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .brand-mark svg { width: 24px; height: 24px; }
+
+    .brand h1 {
       margin: 0;
-      letter-spacing: -0.01em;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
     }
 
-    header .subtitle {
+    .brand h1 span { color: var(--muted); font-weight: 600; }
+
+    .brand .subtitle {
+      margin: 3px 0 0;
+      color: var(--faint);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 0 0 auto;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       color: var(--muted);
       font-size: 12px;
-      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    .live-indicator .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.65);
+      animation: pulseDot 2.2s infinite;
     }
 
     .state-pill {
@@ -64,112 +160,353 @@
       align-items: center;
       gap: 8px;
       font-size: 12px;
-      font-weight: 700;
-      color: var(--accent);
-      background: var(--accent-soft);
-      border: 1px solid #d9e0ff;
+      font-weight: 750;
+      color: var(--cyan);
+      background: rgba(34, 211, 238, 0.1);
+      border: 1px solid rgba(34, 211, 238, 0.32);
       border-radius: 999px;
       padding: 7px 12px;
       white-space: nowrap;
     }
 
-    .state-pill.ok { color: var(--ok); background: var(--ok-soft); border-color: #cdeee0; }
-    .state-pill.warn { color: var(--warn); background: var(--warn-soft); border-color: #f6e2bd; }
-    .state-pill.danger { color: var(--danger); background: var(--danger-soft); border-color: #f4d2d2; }
+    .state-pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
 
-    main {
-      max-width: 1180px;
+    .state-pill.neutral { color: var(--muted); background: rgba(148, 163, 184, 0.08); border-color: var(--line-strong); }
+    .state-pill.ok { color: var(--green); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.34); }
+    .state-pill.warn { color: var(--amber); background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.34); }
+    .state-pill.danger { color: var(--red); background: rgba(251, 113, 133, 0.1); border-color: rgba(251, 113, 133, 0.34); }
+
+    .layout {
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 26px 20px 64px;
       display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
-      gap: 20px;
+      grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+      gap: 22px;
       align-items: start;
     }
 
-    section {
-      background: var(--panel);
+    .col { display: grid; gap: 22px; min-width: 0; }
+
+    .panel {
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px;
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      padding: 20px;
+      animation: panelIn 0.55s both;
     }
 
-    section h2 {
-      margin: 0 0 12px;
-      font-size: 14px;
-      letter-spacing: 0.02em;
+    .panel:nth-child(2) { animation-delay: 0.08s; }
+    .panel:nth-child(3) { animation-delay: 0.16s; }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--muted);
     }
 
-    .stack { display: grid; gap: 14px; }
+    .panel-head p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--faint);
+    }
 
-    .grid-controls {
+    .panel-hint {
+      font-size: 11px;
+      color: var(--faint);
+      white-space: nowrap;
+    }
+
+    .progress-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.12);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-fill {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--violet), var(--green));
+      box-shadow: 0 0 16px rgba(34, 211, 238, 0.5);
+      transition: width 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .steps { display: grid; gap: 12px; }
+
+    .step {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel-soft);
+      transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+    }
+
+    .step:hover { transform: translateY(-1px); }
+    .step.locked { opacity: 0.48; }
+    .step.ready { border-color: rgba(34, 211, 238, 0.34); background: rgba(34, 211, 238, 0.045); }
+    .step.next {
+      border-color: rgba(251, 191, 36, 0.5);
+      background: rgba(251, 191, 36, 0.055);
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.12), 0 14px 44px rgba(251, 191, 36, 0.06);
+    }
+    .step.done { border-color: rgba(52, 211, 153, 0.26); background: rgba(52, 211, 153, 0.04); }
+
+    .step-rail {
+      position: relative;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: rgba(148, 163, 184, 0.1);
+      border: 1px solid var(--line);
+      transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .step-rail svg { width: 22px; height: 22px; }
+
+    .step-num {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      min-width: 19px;
+      height: 19px;
+      padding: 0 4px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--bg);
+      background: var(--muted);
+      border: 2px solid var(--bg-2);
+    }
+
+    .step.ready .step-rail { color: #67e8f9; background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.34); }
+    .step.next .step-rail { color: #fde68a; background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.5); animation: pulseGlow 1.8s ease-in-out infinite; }
+    .step.done .step-rail { color: #6ee7b7; background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.3); }
+
+    .step-content { min-width: 0; }
+
+    .step-heading {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
       gap: 8px;
     }
 
-    button {
-      appearance: none;
-      border: 1px solid var(--line);
-      background: #fff;
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: 10px;
-      padding: 9px 12px;
-      cursor: pointer;
-      transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    .step-title { font-weight: 750; font-size: 14px; }
+
+    .step-status {
+      font-size: 10px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      white-space: nowrap;
     }
 
-    button:hover:not(:disabled) {
-      border-color: #c7d2f7;
-      background: #fbfcff;
+    .step-status.ready { color: #67e8f9; }
+    .step-status.next { color: #fde68a; }
+    .step-status.done { color: #6ee7b7; }
+    .step-status.locked { color: var(--faint); }
+
+    .step-desc { margin: 4px 0 12px; color: var(--faint); font-size: 12px; line-height: 1.45; }
+
+    button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .step-action,
+    .btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 9px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 750;
+      overflow: hidden;
+      transition: transform 0.16s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .step-action:hover:not(:disabled),
+    .btn:hover:not(:disabled) {
+      border-color: rgba(34, 211, 238, 0.55);
+      background: rgba(34, 211, 238, 0.08);
+      box-shadow: 0 10px 26px rgba(34, 211, 238, 0.12);
       transform: translateY(-1px);
     }
 
-    button:active:not(:disabled) { transform: translateY(0); }
+    .step-action:active:not(:disabled),
+    .btn:active:not(:disabled) { transform: translateY(0); }
 
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
+    .step-action:disabled,
+    .btn:disabled { opacity: 0.42; cursor: not-allowed; }
+
+    .step-action.confirm-mode {
+      border-color: rgba(251, 191, 36, 0.6);
+      color: #fde68a;
+      background: rgba(251, 191, 36, 0.12);
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.14), 0 0 24px rgba(251, 191, 36, 0.1);
+      animation: confirmPulse 1.15s ease-in-out infinite;
     }
 
-    button.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
+    .step-action.loading,
+    .btn.loading { color: transparent !important; pointer-events: none; }
+
+    .step-action .spinner,
+    .btn .spinner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      margin: -8px 0 0 -8px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      opacity: 0;
+      animation: spin 0.7s linear infinite;
     }
 
-    button.primary:hover:not(:disabled) { background: #2f4ee6; border-color: #2f4ee6; }
+    .step-action.loading .spinner,
+    .btn.loading .spinner { opacity: 1; }
 
-    button.ghost { background: transparent; border-color: transparent; color: var(--accent); }
+    .success-mark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      margin: -9px 0 0 -9px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #052e22;
+      background: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    .step-action.success,
+    .btn.success { border-color: rgba(52, 211, 153, 0.55); color: #6ee7b7; background: rgba(52, 211, 153, 0.1); }
+    .step-action.success .success-mark,
+    .btn.success .success-mark { opacity: 1; transform: scale(1); animation: pop 0.35s ease; }
+
+    .btn-run {
+      border-color: transparent;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+      color: #04121f;
+      box-shadow: 0 14px 34px rgba(99, 102, 241, 0.26);
+    }
+
+    .btn-run:hover:not(:disabled) {
+      background: linear-gradient(135deg, #22d3ee, #a78bfa);
+      border-color: transparent;
+      box-shadow: 0 16px 40px rgba(99, 102, 241, 0.36);
+    }
+
+    .btn-ghost {
+      min-height: 32px;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-color: var(--line);
+      background: rgba(148, 163, 184, 0.05);
+    }
+
+    .btn-icon,
+    .step-action-icon { width: 17px; height: 17px; display: inline-grid; place-items: center; }
+    .btn-icon svg,
+    .step-action-icon svg { width: 100%; height: 100%; }
 
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
+      gap: 12px;
     }
 
     .metric {
+      position: relative;
+      overflow: hidden;
+      min-height: 86px;
+      padding: 14px;
       border: 1px solid var(--line);
-      background: #fbfcff;
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
     }
+
+    .metric::after {
+      content: "";
+      position: absolute;
+      right: -22px;
+      bottom: -46px;
+      width: 110px;
+      height: 110px;
+      background: radial-gradient(circle, rgba(34, 211, 238, 0.1), transparent 70%);
+    }
+
+    .metric-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .metric-icon { width: 16px; height: 16px; color: var(--muted); }
+    .metric-icon svg { width: 100%; height: 100%; }
 
     .metric .label {
       display: block;
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      margin-bottom: 5px;
+      letter-spacing: 0.13em;
+      color: var(--faint);
     }
 
     .metric .value {
+      display: block;
+      margin-top: 8px;
       font-weight: 750;
       font-size: 15px;
       overflow-wrap: anywhere;
@@ -179,278 +516,584 @@
       list-style: none;
       margin: 0;
       padding: 0;
+      position: relative;
       display: grid;
+      gap: 10px;
+      max-height: 520px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 20px;
+      top: 12px;
+      bottom: 12px;
+      width: 2px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, rgba(34, 211, 238, 0.45), rgba(139, 92, 246, 0.45), rgba(52, 211, 153, 0.4));
+      opacity: 0.55;
+    }
+
+    .timeline-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: 12px;
+      padding: 11px 12px 11px 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.03);
+      animation: riseIn 0.5s both;
+      animation-delay: calc(var(--i) * 85ms);
+    }
+
+    .timeline-node {
+      position: relative;
+      z-index: 1;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: rgba(148, 163, 184, 0.1);
+      border: 1px solid var(--line);
+    }
+
+    .timeline-node svg { width: 20px; height: 20px; }
+
+    .timeline-item.user .timeline-node { color: #6ee7b7; background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.3); box-shadow: 0 0 18px rgba(52, 211, 153, 0.14); }
+    .timeline-item.agent .timeline-node { color: #c4b5fd; background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); box-shadow: 0 0 18px rgba(139, 92, 246, 0.14); }
+    .timeline-item.platform .timeline-node { color: #fcd34d; background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3); box-shadow: 0 0 18px rgba(251, 191, 36, 0.14); }
+    .timeline-item.system .timeline-node { color: #67e8f9; background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.3); box-shadow: 0 0 18px rgba(34, 211, 238, 0.14); }
+
+    .timeline-body { min-width: 0; }
+
+    .timeline-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
       gap: 8px;
-      max-height: 420px;
+      flex-wrap: wrap;
+    }
+
+    .timeline-type { font-weight: 750; font-size: 13px; }
+    .timeline-state { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .timeline-meta { margin-top: 3px; color: var(--faint); font-size: 11px; overflow-wrap: anywhere; }
+
+    .event-data { margin-top: 8px; }
+    .event-data summary {
+      cursor: pointer;
+      list-style: none;
+      color: var(--muted);
+      font-size: 11px;
+      user-select: none;
+    }
+    .event-data summary::-webkit-details-marker { display: none; }
+    .event-data summary::before { content: "▸ "; color: var(--cyan); }
+    .event-data[open] summary::before { content: "▾ "; }
+    .event-data pre {
+      margin: 8px 0 0;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.4);
+      color: var(--muted);
+      font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 150px;
       overflow: auto;
     }
 
-    .timeline li {
-      position: relative;
-      padding: 10px 12px 10px 30px;
-      background: #fbfcff;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-    }
-
-    .timeline li::before {
-      content: "";
-      position: absolute;
-      left: 12px;
-      top: 15px;
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-soft);
-    }
-
-    .timeline li.user::before { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }
-    .timeline li.platform::before { background: var(--warn); box-shadow: 0 0 0 4px var(--warn-soft); }
-
-    .event-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: baseline;
-      flex-wrap: wrap;
-    }
-
-    .event-type {
-      font-weight: 700;
-      font-size: 13px;
-    }
-
-    .event-state {
-      color: var(--muted);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .event-meta {
-      color: var(--muted);
-      font-size: 11px;
-      margin-top: 4px;
-      overflow-wrap: anywhere;
-    }
-
-    .evidence-list {
-      display: grid;
-      gap: 10px;
-    }
+    .evidence-list { display: grid; gap: 10px; }
 
     .evidence-card {
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
-      background: #fbfcff;
+      border-radius: var(--radius-sm);
+      padding: 13px;
+      background: var(--panel-soft);
+      cursor: pointer;
+      animation: riseIn 0.5s both;
+      animation-delay: calc(var(--i) * 70ms);
+      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
     }
 
-    .evidence-card label {
+    .evidence-card:hover { transform: translateY(-2px); border-color: rgba(34, 211, 238, 0.36); box-shadow: 0 14px 36px rgba(34, 211, 238, 0.1); }
+    .evidence-card.selected { border-color: rgba(34, 211, 238, 0.42); background: rgba(34, 211, 238, 0.045); }
+    .evidence-card.expanded { border-color: rgba(139, 92, 246, 0.42); background: rgba(139, 92, 246, 0.05); }
+
+    .evidence-head {
       display: flex;
-      gap: 9px;
-      align-items: flex-start;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .switch {
+      position: relative;
+      flex: 0 0 auto;
+      width: 34px;
+      height: 19px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.18);
       cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .switch span {
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .evidence-check { display: none; }
+    .evidence-check:checked + .switch { background: rgba(34, 211, 238, 0.3); }
+    .evidence-check:checked + .switch span { transform: translateX(15px); background: #67e8f9; box-shadow: 0 0 12px rgba(34, 211, 238, 0.55); }
+
+    .evidence-id { min-width: 0; flex: 1; }
+    .evidence-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-weight: 750;
       font-size: 13px;
     }
 
-    .evidence-card input { margin-top: 2px; }
-
-    .evidence-title {
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
     .badge {
-      font-size: 10px;
-      letter-spacing: 0.05em;
+      font-size: 9px;
+      font-weight: 750;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       color: var(--muted);
-      border: 1px solid var(--line);
-      background: #fff;
+      border: 1px solid var(--line-strong);
       border-radius: 999px;
       padding: 3px 7px;
     }
 
-    .evidence-meta {
-      color: var(--muted);
-      font-size: 11px;
-      margin-top: 5px;
+    .evidence-expand {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
       display: grid;
-      gap: 3px;
-      overflow-wrap: anywhere;
-    }
-
-    .policy {
-      margin-top: 14px;
-      border-top: 1px dashed var(--line);
-      padding-top: 12px;
-      font-size: 12px;
+      place-items: center;
       color: var(--muted);
+      border: 1px solid var(--line);
+      transition: transform 0.2s ease, color 0.2s ease;
     }
 
-    .policy code {
-      display: block;
-      margin-top: 5px;
-      color: var(--ink);
-      background: #f5f7fb;
-      border-radius: 8px;
-      padding: 8px 10px;
-      white-space: pre-wrap;
+    .evidence-expand svg { width: 16px; height: 16px; }
+    .evidence-card.expanded .evidence-expand { transform: rotate(180deg); color: var(--violet); }
+
+    .evidence-meta { margin-top: 8px; color: var(--faint); font-size: 11px; }
+
+    .evidence-body {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.28s ease, opacity 0.28s ease, margin-top 0.28s ease;
     }
+
+    .evidence-card.expanded .evidence-body { max-height: 260px; opacity: 1; margin-top: 12px; }
+
+    .hash-row { display: grid; gap: 3px; margin-top: 8px; }
+    .hash-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); }
+    .hash-row code {
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(2, 6, 23, 0.38);
+      color: #c4b5fd;
+      font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-all;
+    }
+
+    .policy { margin-top: 14px; border-top: 1px dashed var(--line-strong); padding-top: 12px; }
+    .policy-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.11em; color: var(--muted); margin-bottom: 8px; }
+    .policy-clause { margin-top: 8px; }
+    .policy-clause span { display: inline-block; font-size: 10px; font-weight: 750; color: var(--cyan); }
+    .policy-clause p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+
+    .log-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 
     .log {
-      background: #111a2e;
-      color: #e6edf7;
-      border-radius: 12px;
-      padding: 12px;
-      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      min-height: 72px;
-      max-height: 300px;
+      margin-top: 16px;
+      min-height: 180px;
+      max-height: 320px;
       overflow: auto;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #05080f;
+      font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--text);
     }
+
+    .log-line {
+      display: flex;
+      gap: 8px;
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+    }
+
+    .log-time { flex: 0 0 auto; color: var(--faint); }
+    .log-msg { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .log-line.error .log-msg { color: #fda4af; }
+    .log-line.success .log-msg { color: #6ee7b7; }
+    .log-line.warn .log-msg { color: #fde68a; }
+    .log-line.muted .log-msg { color: #94a3b8; }
 
     .toast {
       position: fixed;
       left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%);
-      background: var(--ink);
-      color: #fff;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 13px;
-      box-shadow: var(--shadow);
+      bottom: 28px;
+      z-index: 50;
+      min-width: 280px;
+      max-width: min(560px, calc(100vw - 32px));
+      padding: 12px 14px 15px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: var(--text);
+      box-shadow: 0 18px 50px rgba(2, 6, 23, 0.6);
       opacity: 0;
+      transform: translate(-50%, 16px);
       pointer-events: none;
-      transition: opacity 0.18s ease;
-      max-width: min(520px, calc(100vw - 32px));
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
 
-    .toast.show { opacity: 1; }
-    .toast.error { background: var(--danger); }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { border-color: rgba(251, 113, 133, 0.5); }
+    .toast-msg { font-size: 13px; font-weight: 700; }
+    .toast-bar {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 100%;
+      border-radius: 0 0 13px 13px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      transform-origin: left;
+      transform: scaleX(0);
+    }
+    .toast.error .toast-bar { background: var(--red); }
+    .toast.show .toast-bar { animation: toastBar var(--toast-duration, 3600ms) linear forwards; }
 
     .empty {
-      color: var(--muted);
+      color: var(--faint);
       font-size: 13px;
       text-align: center;
-      padding: 22px 8px;
+      padding: 24px 8px;
     }
 
-    .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    @keyframes float {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to { transform: translate3d(30px, -24px, 0) scale(1.08); }
+    }
 
-    @media (max-width: 860px) {
-      main { grid-template-columns: 1fr; padding: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulseDot {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.65); }
+      70% { box-shadow: 0 0 0 9px rgba(52, 211, 153, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+      50% { box-shadow: 0 0 22px rgba(251, 191, 36, 0.35); }
+    }
+    @keyframes confirmPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    @keyframes pop {
+      0% { transform: scale(0.4); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes toastBar { to { transform: scaleX(1); } }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; padding: 16px; }
+      .topbar { padding: 12px 14px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .topbar { flex-wrap: wrap; }
+      .topbar-right { width: 100%; justify-content: space-between; }
+      .live-indicator { display: none; }
       .metrics { grid-template-columns: 1fr; }
-      header { flex-wrap: wrap; }
+      .panel { padding: 16px; }
+      .step { grid-template-columns: 40px minmax(0, 1fr); padding: 12px; gap: 11px; }
+      .step-rail { width: 40px; height: 40px; }
+      .panel-head { flex-direction: column; }
+      .log-actions { justify-content: flex-start; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>AppealOS · Case Workspace</h1>
-      <div class="subtitle">User-owned appeal workflow runtime — live demo controls</div>
+  <div class="bg" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" data-icon="zap"></div>
+      <div>
+        <h1>AppealOS <span>· Case Workspace</span></h1>
+        <div class="subtitle">User-owned appeal workflow runtime — live demo controls</div>
+      </div>
     </div>
-    <div>
-      <span id="state-pill" class="state-pill">— no case —</span>
+    <div class="topbar-right">
+      <span class="live-indicator"><span class="dot"></span> Runtime live</span>
+      <span id="state-pill" class="state-pill neutral">— no case —</span>
     </div>
   </header>
 
-  <main>
-    <div class="stack">
-      <section>
-        <h2>Case controls</h2>
-        <div class="grid-controls">
-          <button id="btn-reset" data-action="reset">1 · Reset</button>
-          <button id="btn-notice" data-action="notice" disabled>2 · Parse notice</button>
-          <button id="btn-consent" data-action="consent" disabled>3 · Grant consent</button>
-          <button id="btn-mandate" data-action="mandate" disabled>4 · Approve mandate</button>
-          <button id="btn-submit" data-action="submit" disabled>5 · Submit appeal</button>
-          <button id="btn-supplement" data-action="supplement" disabled>6 · Send supplement</button>
-          <button id="btn-verify" data-action="verify" disabled>7 · Verify account</button>
-          <button id="btn-run" class="primary" data-action="run">Run full flow</button>
+  <main class="layout">
+    <div class="col">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Flow controls</h2>
+            <p>Step through the deterministic appeal workflow.</p>
+          </div>
+          <button id="btn-run" class="btn btn-run" data-action="run">
+            <span class="btn-icon" data-icon="zap"></span>
+            <span>Run full flow</span>
+            <span class="spinner"></span>
+            <span class="success-mark">✓</span>
+          </button>
         </div>
-        <div class="inline-actions">
-          <button id="btn-case" class="ghost" data-action="case">Refresh case</button>
-          <button id="btn-export" class="ghost" data-action="export" disabled>Export outcome JSON</button>
+
+        <div class="progress-track"><span id="flow-progress" class="progress-fill"></span></div>
+
+        <div class="steps">
+          <div class="step next" id="step-reset" data-step="reset">
+            <div class="step-rail"><span class="step-icon" data-icon="refresh"></span><span class="step-num">01</span></div>
+            <div class="step-content">
+              <div class="step-heading"><span class="step-title">Reset case</span><span class="step-status next">Start here</span></div>
+              <p class="step-desc">Create a fresh synthetic rider and case record.</p>
+              <button id="btn-reset" class="step-action" data-action="reset"><span class="step-action-icon" data-icon="refresh"></span><span class="step-action-label">Reset case</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+            </div>
+          </div>
+
+          <div class="step locked" id="step-notice" data-step="notice">
+            <div class="step-rail"><span class="step-icon" data-icon="scan"></span><span class="step-num">02</span></div>
+            <div class="step-content">
+              <div class="step-heading"><span class="step-title">Parse notice</span><span class="step-status locked">Locked</span></div>
+              <p class="step-desc">Run Gemini extraction and validate deterministic platform constraints.</p>
+              <button id="btn-notice" class="step-action" data-action="notice" disabled><span class="step-action-icon" data-icon="scan"></span><span class="step-action-label">Parse notice</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+            </div>
+          </div>
+
+          <div class="step locked" id="step-consent" data-step="consent">
+            <div class="step-rail"><span class="step-icon" data-icon="shield"></span><span class="step-num">03</span></div>
+            <div class="step-content">
+              <div class="step-heading"><span class="step-title">Grant consent</span><span class="step-status locked">Locked</span></div>
+              <p class="step-desc">Approve scoped analysis of the selected evidence artifacts.</p>
+              <button id="btn-consent" class="step-action" data-action="consent" disabled><span class="step-action-icon" data-icon="shield"></span><span class="step-action-label">Grant consent</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+            </div>
+          </div>
+
+          <div class="step locked" id="step-mandate" data-step="mandate">
+            <div class="step-rail"><span class="step-icon" data-icon="badge"></span><span class="step-num">04</span></div>
+            <div class="step-content">
+              <div class="step-heading"><span class="step-title">Approve mandate</span><span class="step-status locked">Locked</span></div>
+              <p class="step-desc">Draft citations and approve the scoped appeal mandate.</p>
+              <button id="btn-mandate" class="step-action" data-action="mandate" disabled><span class="step-action-icon" data-icon="badge"></span><span class="step-action-label">Approve mandate</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+            </div>
+          </div>
+
+          <div class="step locked" id="step-submit" data-step="submit">
+            <div class="step-rail"><span class="step-icon" data-icon="send"></span><span class="step-num">05</span></div>
+            <div class="step-content">
+              <div class="step-heading"><span class="step-title">Submit appeal</span><span class="step-status locked">Locked</span></div>
+              <p class="step-desc">Write the initial appeal to MockDrop and receive the receipt.</p>
+              <button id="btn-submit" class="step-action" data-action="submit" disabled><span class="step-action-icon" data-icon="send"></span><span class="step-action-label">Submit appeal</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+            </div>
+          </div>
+
+          <div class="step locked" id="step-supplement" data-step="supplement">
+            <div class="step-rail"><span class="step-icon" data-icon="upload"></span><span class="step-num">06</span></div>
+            <div class="step-content">
+              <div class="step-heading"><span class="step-title">Send supplement</span><span class="step-status locked">Locked</span></div>
+              <p class="step-desc">Submit the authorized device-log supplement.</p>
+              <button id="btn-supplement" class="step-action" data-action="supplement" disabled><span class="step-action-icon" data-icon="upload"></span><span class="step-action-label">Send supplement</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+            </div>
+          </div>
+
+          <div class="step locked" id="step-verify" data-step="verify">
+            <div class="step-rail"><span class="step-icon" data-icon="check-circle"></span><span class="step-num">07</span></div>
+            <div class="step-content">
+              <div class="step-heading"><span class="step-title">Verify account</span><span class="step-status locked">Locked</span></div>
+              <p class="step-desc">Confirm the MockDrop account status is ACTIVE.</p>
+              <button id="btn-verify" class="step-action" data-action="verify" disabled><span class="step-action-icon" data-icon="check-circle"></span><span class="step-action-label">Verify account</span><span class="spinner"></span><span class="success-mark">✓</span></button>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section>
-        <h2>Case summary</h2>
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Case summary</h2>
+            <p>Live state and identifiers for the active case.</p>
+          </div>
+        </div>
         <div class="metrics">
-          <div class="metric"><span class="label">State</span><span id="m-state" class="value">—</span></div>
-          <div class="metric"><span class="label">Case ID</span><span id="m-case" class="value">—</span></div>
-          <div class="metric"><span class="label">Account</span><span id="m-account" class="value">—</span></div>
-          <div class="metric"><span class="label">Appeal</span><span id="m-appeal" class="value">—</span></div>
-          <div class="metric"><span class="label">Version</span><span id="m-version" class="value">—</span></div>
-          <div class="metric"><span class="label">Deadline</span><span id="m-deadline" class="value">—</span></div>
+          <div class="metric"><div class="metric-top"><span class="label">State</span><span class="metric-icon" data-icon="zap"></span></div><span id="m-state" class="value">—</span></div>
+          <div class="metric"><div class="metric-top"><span class="label">Case ID</span><span class="metric-icon" data-icon="file"></span></div><span id="m-case" class="value">—</span></div>
+          <div class="metric"><div class="metric-top"><span class="label">Account</span><span class="metric-icon" data-icon="key"></span></div><span id="m-account" class="value">—</span></div>
+          <div class="metric"><div class="metric-top"><span class="label">Appeal</span><span class="metric-icon" data-icon="send"></span></div><span id="m-appeal" class="value">—</span></div>
+          <div class="metric"><div class="metric-top"><span class="label">Version</span><span class="metric-icon" data-icon="clock"></span></div><span id="m-version" class="value">—</span></div>
+          <div class="metric"><div class="metric-top"><span class="label">Deadline</span><span class="metric-icon" data-icon="clock"></span></div><span id="m-deadline" class="value">—</span></div>
         </div>
       </section>
+    </div>
 
-      <section>
-        <h2>Status timeline</h2>
+    <div class="col">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Status timeline</h2>
+            <p>Every state transition is appended below.</p>
+          </div>
+          <span id="timeline-count" class="panel-hint">0 events</span>
+        </div>
         <ol id="timeline" class="timeline">
           <li class="empty">Reset the case to begin the appeal workflow.</li>
         </ol>
       </section>
-    </div>
 
-    <div class="stack">
-      <section>
-        <h2>Evidence</h2>
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Evidence</h2>
+            <p>Toggle artifacts, then expand to inspect hashes.</p>
+          </div>
+          <span class="panel-hint">Selects consent scope</span>
+        </div>
         <div id="evidence" class="evidence-list">
           <div class="empty">Loading evidence inventory…</div>
         </div>
         <div class="policy" id="policy"></div>
       </section>
 
-      <section>
-        <h2>Live log</h2>
-        <div id="log" class="log">Ready.</div>
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Live log</h2>
+            <p>Runtime activity from the demo controller.</p>
+          </div>
+          <div class="log-actions">
+            <button id="btn-case" class="btn btn-ghost" data-action="case"><span class="btn-icon" data-icon="refresh"></span>Refresh</button>
+            <button id="btn-export" class="btn btn-ghost" data-action="export" disabled><span class="btn-icon" data-icon="download"></span>Export JSON</button>
+          </div>
+        </div>
+        <div id="log" class="log"></div>
       </section>
     </div>
   </main>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toast-msg" class="toast-msg"></span>
+    <span class="toast-bar"></span>
+  </div>
 
   <script>
-    const statePill = document.getElementById("state-pill");
-    const timeline = document.getElementById("timeline");
-    const evidenceEl = document.getElementById("evidence");
-    const policyEl = document.getElementById("policy");
-    const logEl = document.getElementById("log");
-    const toastEl = document.getElementById("toast");
-    const stateMetric = document.getElementById("m-state");
-    const caseMetric = document.getElementById("m-case");
-    const accountMetric = document.getElementById("m-account");
-    const appealMetric = document.getElementById("m-appeal");
-    const versionMetric = document.getElementById("m-version");
-    const deadlineMetric = document.getElementById("m-deadline");
+    const $ = (id) => document.getElementById(id);
+    const statePill = $("state-pill");
+    const timelineEl = $("timeline");
+    const timelineCount = $("timeline-count");
+    const evidenceEl = $("evidence");
+    const policyEl = $("policy");
+    const logEl = $("log");
+    const toastEl = $("toast");
+    const toastMsg = $("toast-msg");
+    const flowProgress = $("flow-progress");
+    const stateMetric = $("m-state");
+    const caseMetric = $("m-case");
+    const accountMetric = $("m-account");
+    const appealMetric = $("m-appeal");
+    const versionMetric = $("m-version");
+    const deadlineMetric = $("m-deadline");
 
     const buttons = {
-      reset: document.getElementById("btn-reset"),
-      notice: document.getElementById("btn-notice"),
-      consent: document.getElementById("btn-consent"),
-      mandate: document.getElementById("btn-mandate"),
-      submit: document.getElementById("btn-submit"),
-      supplement: document.getElementById("btn-supplement"),
-      verify: document.getElementById("btn-verify"),
-      run: document.getElementById("btn-run"),
-      case: document.getElementById("btn-case"),
-      export: document.getElementById("btn-export"),
+      reset: $("btn-reset"),
+      notice: $("btn-notice"),
+      consent: $("btn-consent"),
+      mandate: $("btn-mandate"),
+      submit: $("btn-submit"),
+      supplement: $("btn-supplement"),
+      verify: $("btn-verify"),
+      run: $("btn-run"),
+      case: $("btn-case"),
+      export: $("btn-export"),
     };
+
+    const stepEls = {
+      reset: $("step-reset"),
+      notice: $("step-notice"),
+      consent: $("step-consent"),
+      mandate: $("step-mandate"),
+      submit: $("step-submit"),
+      supplement: $("step-supplement"),
+      verify: $("step-verify"),
+    };
+
+    const icons = {
+      refresh: '<path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>',
+      scan: '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+      shield: '<path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/>',
+      badge: '<circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/>',
+      send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>',
+      upload: '<path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M5 20h14"/>',
+      "check-circle": '<circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/>',
+      zap: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+      download: '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>',
+      key: '<circle cx="7.5" cy="15.5" r="3.5"/><path d="M10 13l10-10"/><path d="M15 6l4 4"/>',
+      file: '<path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6V3z"/>',
+      inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+      dot: '<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>',
+      clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      chevron: '<path d="M6 9l6 6 6-6"/>',
+    };
+
+    function icon(name) {
+      const body = icons[name] || icons.dot;
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+    }
+
+    document.querySelectorAll("[data-icon]").forEach((el) => {
+      el.innerHTML = icon(el.dataset.icon);
+    });
 
     let currentCase = null;
     let evidence = null;
     let toastTimer = null;
+    let confirmTimer = null;
 
     const stateOrder = [
       "NOTICE_RECEIVED",
@@ -464,17 +1107,44 @@
       "ACCOUNT_ACTIVE",
     ];
 
-    function toast(message, isError = false) {
-      toastEl.textContent = message;
+    const stepFlow = {
+      notice: { readyIdx: 0, doneIdx: 1 },
+      consent: { readyIdx: 1, doneIdx: 2 },
+      mandate: { readyIdx: 2, doneIdx: 3 },
+      submit: { readyIdx: 3, doneIdx: 5 },
+      supplement: { readyIdx: 5, doneIdx: 7 },
+      verify: { readyIdx: 7, doneIdx: 8 },
+    };
+
+    const actionIcon = {
+      DEMO_RESET: "refresh",
+      PARSE_SUCCEEDED: "scan",
+      ANALYSIS_CONSENT_APPROVED: "shield",
+      MANDATE_APPROVED: "badge",
+      APPEAL_SUBMITTED: "send",
+      SUPPLEMENT_REQUESTED: "inbox",
+      SUPPLEMENT_SUBMITTED: "upload",
+      DECISION_APPROVED: "check-circle",
+      DECISION_REJECTED: "dot",
+      ACCOUNT_STATUS_ACTIVE: "key",
+    };
+
+    function toast(message, isError = false, duration = 3600) {
+      toastMsg.textContent = message;
       toastEl.classList.toggle("error", isError);
+      toastEl.style.setProperty("--toast-duration", duration + "ms");
       toastEl.classList.add("show");
       window.clearTimeout(toastTimer);
-      toastTimer = window.setTimeout(() => toastEl.classList.remove("show"), 3600);
+      toastTimer = window.setTimeout(() => toastEl.classList.remove("show"), duration);
     }
 
-    function log(message, isError = false) {
+    function log(message, level = "info") {
+      const line = document.createElement("div");
+      line.className = "log-line " + level;
       const time = new Date().toLocaleTimeString([], { hour12: false });
-      logEl.textContent += "\n" + `[${time}] ` + message;
+      line.innerHTML = '<span class="log-time">[' + time + ']</span><span class="log-msg">' + escapeHtml(message) + '</span>';
+      logEl.appendChild(line);
+      while (logEl.children.length > 80) logEl.removeChild(logEl.firstChild);
       logEl.scrollTop = logEl.scrollHeight;
     }
 
@@ -500,22 +1170,40 @@
     }
 
     function applyCase(data) {
-      if (!data || !data.case) return;
-      currentCase = data.case;
+      if (!data) return;
+      currentCase = data.case ? data.case : data;
       renderCase();
       log("case updated → " + currentCase.state + " (v" + currentCase.version + ")");
     }
 
     function stateClass(state) {
-      if (!state) return "";
+      if (!state) return "neutral";
       if (state === "ACCOUNT_ACTIVE" || state === "DECIDED_APPROVED") return "ok";
       if (state === "SUPPLEMENT_REQUESTED" || state === "ACKNOWLEDGED") return "warn";
       if (state.includes("REJECTED")) return "danger";
       return "";
     }
 
+    function actorClass(actor) {
+      switch (actor) {
+        case "USER": return "user";
+        case "AGENT": return "agent";
+        case "PLATFORM": return "platform";
+        default: return "system";
+      }
+    }
+
+    function eventIcon(type) {
+      return icon(actionIcon[type] || "dot");
+    }
+
     function renderCase() {
       const c = currentCase;
+      if (!c) {
+        renderEmpty();
+        return;
+      }
+
       stateMetric.textContent = c.state || "—";
       caseMetric.textContent = c.caseId || "—";
       accountMetric.textContent = c.accountId || "—";
@@ -526,27 +1214,88 @@
       statePill.textContent = c.state || "no case";
       statePill.className = "state-pill " + stateClass(c.state);
 
-      buttons.export.disabled = !currentCase;
-      updateButtons();
+      const idx = stateOrder.indexOf(c.state);
+      const total = stateOrder.length;
+      flowProgress.style.width = Math.max(0, Math.min(100, ((idx + 1) / total) * 100)) + "%";
 
-      if (!c.timeline || c.timeline.length === 0) {
-        timeline.innerHTML = '<li class="empty">No timeline events yet.</li>';
-        return;
+      if (!Array.isArray(c.timeline) || c.timeline.length === 0) {
+        timelineEl.innerHTML = '<li class="empty">No timeline events yet.</li>';
+        timelineCount.textContent = "0 events";
+      } else {
+        timelineCount.textContent = c.timeline.length + " events";
+        timelineEl.innerHTML = c.timeline.map((event, index) => {
+          const cls = actorClass(event.actor);
+          const payload = event.data && Object.keys(event.data).length ? JSON.stringify(event.data, null, 2) : "";
+          return '<li class="timeline-item ' + cls + '" style="--i:' + index + '">' +
+            '<div class="timeline-node">' + eventIcon(event.type) + '</div>' +
+            '<div class="timeline-body">' +
+              '<div class="timeline-top"><span class="timeline-type">' + escapeHtml(event.type) + '</span><span class="timeline-state">' + escapeHtml(event.state || "") + ' · ' + escapeHtml(event.actor || "") + '</span></div>' +
+              '<div class="timeline-meta">' + escapeHtml(formatDate(event.createdAt)) + '</div>' +
+              (payload ? '<details class="event-data"><summary>Payload</summary><pre>' + escapeHtml(payload) + '</pre></details>' : "") +
+            '</div>' +
+          '</li>';
+        }).join("");
+        timelineEl.scrollTop = timelineEl.scrollHeight;
       }
 
-      timeline.innerHTML = c.timeline.map((event) => {
-        const cls = event.actor === "USER" ? "user" : (event.actor === "PLATFORM" ? "platform" : "");
-        const data = event.data && Object.keys(event.data).length ? JSON.stringify(event.data) : "";
-        return `
-          <li class="${cls}">
-            <div class="event-head">
-              <span class="event-type">${escapeHtml(event.type)}</span>
-              <span class="event-state">${escapeHtml(event.state || "")} · ${escapeHtml(event.actor || "")}</span>
-            </div>
-            <div class="event-meta">${escapeHtml(formatDate(event.createdAt))}${data ? " · " + escapeHtml(data) : ""}</div>
-          </li>`;
-      }).join("");
-      timeline.scrollTop = timeline.scrollHeight;
+      updateButtons();
+    }
+
+    function renderEmpty() {
+      stateMetric.textContent = "—";
+      caseMetric.textContent = "—";
+      accountMetric.textContent = "—";
+      appealMetric.textContent = "—";
+      versionMetric.textContent = "—";
+      deadlineMetric.textContent = "—";
+      statePill.textContent = "no case";
+      statePill.className = "state-pill neutral";
+      timelineEl.innerHTML = '<li class="empty">Reset the case to begin the appeal workflow.</li>';
+      timelineCount.textContent = "0 events";
+      flowProgress.style.width = "0%";
+      updateButtons();
+    }
+
+    function updateButtons() {
+      const state = currentCase ? currentCase.state : null;
+      const idx = state ? stateOrder.indexOf(state) : -1;
+      const hasCase = !!currentCase;
+
+      buttons.reset.disabled = false;
+      buttons.notice.disabled = idx !== 0;
+      buttons.consent.disabled = idx !== 1;
+      buttons.mandate.disabled = idx !== 2;
+      buttons.submit.disabled = idx !== 3;
+      buttons.supplement.disabled = idx !== 5;
+      buttons.verify.disabled = idx !== 7;
+      buttons.export.disabled = !currentCase;
+
+      setResetStep(hasCase);
+      Object.keys(stepFlow).forEach((name) => {
+        const flow = stepFlow[name];
+        const ready = hasCase && idx === flow.readyIdx;
+        const done = hasCase && idx >= flow.doneIdx;
+        const next = ready && !done;
+        const step = stepEls[name];
+        step.classList.toggle("done", done);
+        step.classList.toggle("ready", ready);
+        step.classList.toggle("next", next);
+        step.classList.toggle("locked", hasCase ? !ready && !done : true);
+        const status = step.querySelector(".step-status");
+        status.textContent = done ? "Completed" : next ? "Next action" : ready ? "Ready" : "Locked";
+        status.className = "step-status " + (done ? "done" : next ? "next" : ready ? "ready" : "locked");
+      });
+    }
+
+    function setResetStep(hasCase) {
+      const step = stepEls.reset;
+      step.classList.toggle("done", hasCase);
+      step.classList.toggle("ready", hasCase);
+      step.classList.toggle("next", !hasCase);
+      step.classList.remove("locked");
+      const status = step.querySelector(".step-status");
+      status.textContent = hasCase ? "Ready" : "Start here";
+      status.className = "step-status " + (hasCase ? "ready" : "next");
     }
 
     function formatDate(value) {
@@ -561,17 +1310,107 @@
       }[ch]));
     }
 
-    function updateButtons() {
-      const state = currentCase ? currentCase.state : null;
-      const idx = state ? stateOrder.indexOf(state) : -1;
-      buttons.reset.disabled = false;
-      buttons.notice.disabled = idx !== 0;
-      buttons.consent.disabled = idx !== 1;
-      buttons.mandate.disabled = idx !== 2;
-      buttons.submit.disabled = idx !== 3;
-      buttons.supplement.disabled = idx !== 5;
-      buttons.verify.disabled = idx !== 7;
-      buttons.export.disabled = !currentCase;
+    function setLoading(btn, loading) {
+      btn.classList.toggle("loading", loading);
+    }
+
+    function setSuccess(btn) {
+      btn.classList.add("success");
+      window.setTimeout(() => btn.classList.remove("success"), 1500);
+    }
+
+    function startConfirm(action, btn) {
+      window.clearTimeout(confirmTimer);
+      const label = btn.querySelector(".step-action-label");
+      if (label && !btn.dataset.label) btn.dataset.label = label.textContent;
+      if (label) label.textContent = action === "consent" ? "Confirm consent?" : "Confirm mandate?";
+      btn.classList.add("confirm-mode");
+      toast(action === "consent" ? "Click again to grant consent" : "Click again to approve mandate", false, 3400);
+      confirmTimer = window.setTimeout(() => resetConfirm(btn), 4500);
+    }
+
+    function resetConfirm(btn) {
+      window.clearTimeout(confirmTimer);
+      btn.classList.remove("confirm-mode");
+      const label = btn.querySelector(".step-action-label");
+      if (label && btn.dataset.label) label.textContent = btn.dataset.label;
+    }
+
+    async function runAction(action, btn) {
+      resetConfirm(btn);
+      Object.values(buttons).forEach((b) => { b.disabled = true; });
+      setLoading(btn, true);
+      try {
+        let data;
+        if (action === "reset") {
+          data = await api("/demo/reset", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Case reset complete");
+        } else if (action === "notice") {
+          data = await api("/demo/notice", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Notice parsed");
+        } else if (action === "consent") {
+          const artifactIds = selectedArtifactIds();
+          data = await api("/demo/consent", { method: "POST", body: JSON.stringify({ artifact_ids: artifactIds }) });
+          applyCase(data);
+          toast("Consent granted");
+        } else if (action === "mandate") {
+          data = await api("/demo/mandate", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Mandate approved");
+        } else if (action === "submit") {
+          data = await api("/demo/submit", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Appeal submitted");
+        } else if (action === "supplement") {
+          data = await api("/demo/supplement", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Supplement sent");
+        } else if (action === "verify") {
+          data = await api("/demo/verify", { method: "POST", body: "{}" });
+          applyCase(data);
+          toast("Account verified ACTIVE");
+        } else if (action === "run") {
+          log("starting full binding flow…", "muted");
+          data = await api("/demo/run", { method: "POST", body: "{}" });
+          currentCase = data.case;
+          renderCase();
+          log("full flow complete → " + data.final_state, "success");
+          toast("Full flow complete: " + data.final_state);
+        } else if (action === "case") {
+          await refreshCase();
+          return;
+        } else if (action === "export") {
+          log("generating outcome export…", "muted");
+          await new Promise((resolve) => window.setTimeout(resolve, 750));
+          data = await api("/demo/case");
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "appealos-case-" + (data.caseId || "export") + ".json";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          toast("Outcome exported");
+          log("outcome exported → " + a.download, "success");
+        }
+        setSuccess(btn);
+      } catch (err) {
+        log(action + " failed: " + err.message, "error");
+        toast(err.message, true);
+      } finally {
+        setLoading(btn, false);
+        updateButtons();
+      }
+    }
+
+    function selectedArtifactIds() {
+      const boxes = [...evidenceEl.querySelectorAll('.evidence-check:checked')];
+      if (boxes.length === 0) return null;
+      return boxes.map((box) => box.value);
     }
 
     async function refreshCase() {
@@ -583,98 +1422,11 @@
       } catch (err) {
         if (err.status === 409) {
           currentCase = null;
-          stateMetric.textContent = "—";
-          caseMetric.textContent = "—";
-          accountMetric.textContent = "—";
-          appealMetric.textContent = "—";
-          versionMetric.textContent = "—";
-          deadlineMetric.textContent = "—";
-          statePill.textContent = "no case";
-          statePill.className = "state-pill";
-          timeline.innerHTML = '<li class="empty">Reset the case to begin the appeal workflow.</li>';
-          updateButtons();
-          log("no active case yet; click Reset", true);
+          renderEmpty();
+          log("no active case yet; click Reset case", "warn");
           return;
         }
-        log("refresh failed: " + err.message, true);
-        toast(err.message, true);
-      }
-    }
-
-    async function runAction(action) {
-      const busy = {};
-      Object.values(buttons).forEach((btn) => { busy[btn.id] = btn.disabled; btn.disabled = true; });
-      try {
-        if (action === "reset") {
-          const data = await api("/demo/reset", { method: "POST", body: "{}" });
-          applyCase(data);
-          toast("Case reset complete");
-        } else if (action === "notice") {
-          const data = await api("/demo/notice", { method: "POST", body: "{}" });
-          applyCase(data);
-          toast("Notice parsed");
-        } else if (action === "consent") {
-          const artifactIds = selectedArtifactIds();
-          const data = await api("/demo/consent", { method: "POST", body: JSON.stringify({ artifact_ids: artifactIds }) });
-          applyCase(data);
-          toast("Consent granted");
-        } else if (action === "mandate") {
-          const data = await api("/demo/mandate", { method: "POST", body: "{}" });
-          applyCase(data);
-          toast("Mandate approved");
-        } else if (action === "submit") {
-          const data = await api("/demo/submit", { method: "POST", body: "{}" });
-          applyCase(data);
-          toast("Appeal submitted");
-        } else if (action === "supplement") {
-          const data = await api("/demo/supplement", { method: "POST", body: "{}" });
-          applyCase(data);
-          toast("Supplement sent");
-        } else if (action === "verify") {
-          const data = await api("/demo/verify", { method: "POST", body: "{}" });
-          applyCase(data);
-          toast("Account verified ACTIVE");
-        } else if (action === "run") {
-          const data = await api("/demo/run", { method: "POST", body: "{}" });
-          currentCase = data.case;
-          renderCase();
-          log("full flow complete → " + data.final_state);
-          toast("Full flow complete: " + data.final_state);
-        } else if (action === "case") {
-          await refreshCase();
-          return;
-        } else if (action === "export") {
-          await exportCase();
-          return;
-        }
-      } catch (err) {
-        log(action + " failed: " + err.message, true);
-        toast(err.message, true);
-      } finally {
-        updateButtons();
-      }
-    }
-
-    function selectedArtifactIds() {
-      const boxes = [...evidenceEl.querySelectorAll('input[type="checkbox"]:checked')];
-      if (boxes.length === 0) return null;
-      return boxes.map((box) => box.value);
-    }
-
-    async function exportCase() {
-      try {
-        const data = await api("/demo/case");
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "appealos-case-" + (data.caseId || "export") + ".json";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        toast("Outcome exported");
-      } catch (err) {
+        log("refresh failed: " + err.message, "error");
         toast(err.message, true);
       }
     }
@@ -684,27 +1436,26 @@
       if (!Array.isArray(data.evidence_inventory)) {
         evidenceEl.innerHTML = '<div class="empty">No evidence inventory available.</div>';
       } else {
-        evidenceEl.innerHTML = data.evidence_inventory.map((item) => `
-          <div class="evidence-card">
-            <label>
-              <input type="checkbox" value="${escapeHtml(item.artifactId)}" checked />
-              <div>
-                <div class="evidence-title">
-                  <span>${escapeHtml(item.artifactId)}</span>
-                  <span class="badge">${escapeHtml(item.kind || "")}</span>
-                </div>
-                <div class="evidence-meta">
-                  <span>capturedAt ${escapeHtml(formatDate(item.capturedAt))}</span>
-                  <span>sha256 ${escapeHtml(item.plaintextSha256 || "")}</span>
-                </div>
-              </div>
-            </label>
-          </div>`).join("");
+        evidenceEl.innerHTML = data.evidence_inventory.map((item, index) => (
+          '<article class="evidence-card selected" data-artifact="' + escapeHtml(item.artifactId) + '" style="--i:' + index + '">' +
+            '<div class="evidence-head">' +
+              '<input type="checkbox" class="evidence-check" id="ev-' + escapeHtml(item.artifactId) + '" value="' + escapeHtml(item.artifactId) + '" checked />' +
+              '<label class="switch" for="ev-' + escapeHtml(item.artifactId) + '"><span></span></label>' +
+              '<div class="evidence-id"><div class="evidence-title"><span>' + escapeHtml(item.artifactId) + '</span><span class="badge">' + escapeHtml(item.kind || "") + '</span></div></div>' +
+              '<button class="evidence-expand" type="button" aria-label="Expand evidence">' + icon("chevron") + '</button>' +
+            '</div>' +
+            '<div class="evidence-meta">Captured ' + escapeHtml(formatDate(item.capturedAt)) + '</div>' +
+            '<div class="evidence-body">' +
+              '<div class="hash-row"><span class="hash-label">sha256</span><code>' + escapeHtml(item.plaintextSha256 || "") + '</code></div>' +
+              '<div class="hash-row"><span class="hash-label">artifact id</span><code>' + escapeHtml(item.artifactId) + '</code></div>' +
+            '</div>' +
+          '</article>'
+        )).join("");
       }
 
       const clauses = data.policy_profile && data.policy_profile.clauses;
       policyEl.innerHTML = clauses
-        ? "<strong>Policy profile</strong>" + Object.entries(clauses).map(([id, text]) => `<code>${escapeHtml(id)} — ${escapeHtml(text)}</code>`).join("")
+        ? '<div class="policy-title">Policy profile</div>' + Object.entries(clauses).map(([id, text]) => '<div class="policy-clause"><span>' + escapeHtml(id) + '</span><p>' + escapeHtml(text) + '</p></div>').join("")
         : "";
     }
 
@@ -715,15 +1466,43 @@
         log("evidence inventory loaded (" + data.evidence_inventory.length + " artifacts)");
       } catch (err) {
         evidenceEl.innerHTML = '<div class="empty">Could not load evidence.</div>';
-        log("evidence load failed: " + err.message, true);
+        log("evidence load failed: " + err.message, "error");
       }
     }
 
-    document.addEventListener("click", (event) => {
-      const btn = event.target.closest("button[data-action]");
-      if (btn) runAction(btn.dataset.action);
+    evidenceEl.addEventListener("change", (event) => {
+      const check = event.target.closest(".evidence-check");
+      if (!check) return;
+      const card = check.closest(".evidence-card");
+      if (card) card.classList.toggle("selected", check.checked);
     });
 
+    evidenceEl.addEventListener("click", (event) => {
+      const card = event.target.closest(".evidence-card");
+      if (!card) return;
+      if (event.target.closest(".evidence-expand")) {
+        card.classList.toggle("expanded");
+        return;
+      }
+      if (event.target.closest(".switch") || event.target.closest(".evidence-check")) return;
+      const check = card.querySelector(".evidence-check");
+      if (!check) return;
+      check.checked = !check.checked;
+      check.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    document.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-action]");
+      if (!btn || btn.disabled) return;
+      const action = btn.dataset.action;
+      if ((action === "consent" || action === "mandate") && !btn.classList.contains("confirm-mode")) {
+        startConfirm(action, btn);
+        return;
+      }
+      runAction(action, btn);
+    });
+
+    log("workspace ready", "muted");
     refreshCase();
     loadEvidence();
   </script>
