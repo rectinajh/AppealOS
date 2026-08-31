@@ -14,7 +14,7 @@
 | Tagline (EN) | `A user-owned appeal workflow runtime for an algorithmic world.` | ✅ 直接使用 |
 | 一句话简介 (中文) | 一个用户拥有的算法申诉工作流运行时：一次授权后，代理完成提交、补证、追踪与账户状态核验。 | ✅ 留档 |
 | Primary track | `The Taskmaster` | ✅ 直接使用 |
-| Repository | `[REPOSITORY_URL]`（提交前由用户/工程师回填公开仓库地址） | ⚠️ 待回填 |
+| Repository | https://github.com/rectinajh/AppealOS | ✅ 已回填 |
 | Demo video URL | `[DEMO_VIDEO_URL]`（YouTube/Vimeo/Drive 外链，提交前由用户上传后回填） | ⚠️ 待回填 |
 
 ---
@@ -204,7 +204,7 @@ AppealOS 只使用合成 fixture 与公开参考资料，不摄取真实用户�
 - [ ] `Technologies used` 已点名 Gemini 3.5+、Google ADK、Cloud Run；MockDrop 已标注为合成模拟平台。
 - [ ] 工程师回填 `[DEPLOYED_APPEALOS_URL]` 与 `[DEPLOYED_MOCKDROP_URL]` 后再更新 Cloud Run 相关文案。
 - [ ] 工程师回填确切 Gemini model ID、endpoint、region 与 ADK version（部署 smoke test 后）。
-- [ ] 用户回填 `[REPOSITORY_URL]` 与 `[DEMO_VIDEO_URL]`。
+- [ ] 用户回填 `[DEMO_VIDEO_URL]`（YouTube/Vimeo/Drive 外链）；仓库地址已回填为 https://github.com/rectinajh/AppealOS。
 - [ ] 仓库公开可见且未提交 `.env`、`.pem`、`.key` 或任何 API key。
 - [ ] 演示视频 ≤ 4 分钟，且展示 Gemini、ADK、Cloud Run、Pub/Sub 与外部状态变化证据。
 - [ ] README 的 `Submission / Devpost` 小节与 `SUBMISSION.md` 一致；如与工程师 README 改动冲突，以本 `SUBMISSION.md` 为准。
@@ -213,7 +213,7 @@ AppealOS 只使用合成 fixture 与公开参考资料，不摄取真实用户�
 
 | 占位项 / Placeholder | 责任方 / Owner | 位置 / Where |
 |---|---|---|
-| `[REPOSITORY_URL]` | 用户/工程师 | `SUBMISSION.md` §0 |
+| `[REPOSITORY_URL]` | 用户/工程师 | 已回填：https://github.com/rectinajh/AppealOS |
 | `[DEMO_VIDEO_URL]` | 用户/设计师 | `SUBMISSION.md` §0、§1.5 |
 | `[DEPLOYED_APPEALOS_URL]` | 工程师 | 已回填：https://appealos-agrdlgr4ea-uc.a.run.app |
 | `[DEPLOYED_MOCKDROP_URL]` | 工程师 | 已回填：https://mockdrop-agrdlgr4ea-uc.a.run.app |
