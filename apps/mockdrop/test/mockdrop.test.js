@@ -12,9 +12,20 @@ import { createMockDropServer } from "../src/server.js";
 describe("MockDrop API", () => {
   let server;
   let baseUrl;
+  let publishedEvents;
 
   beforeEach(async () => {
-    server = createMockDropServer({ logger: { error() {} } });
+    publishedEvents = [];
+    server = createMockDropServer({
+      logger: { error() {} },
+      publisher: {
+        enabled: false,
+        async publish(event) {
+          publishedEvents.push(event);
+          return null;
+        }
+      }
+    });
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
     baseUrl = `http://127.0.0.1:${address.port}`;
@@ -110,6 +121,14 @@ describe("MockDrop API", () => {
     assert.equal(replay.payload.appeal.appealId, first.payload.appeal.appealId);
     assert.equal(replay.payload.receipt.receiptId, first.payload.receipt.receiptId);
     assert.equal(server.store.appeals.size, 1);
+  });
+
+  test("does not republish an outbound event on idempotent replay", async () => {
+    await submitAppeal("no-republish-key");
+    await submitAppeal("no-republish-key");
+
+    assert.equal(publishedEvents.length, 1);
+    assert.equal(publishedEvents[0].type, "SUPPLEMENT_REQUESTED");
   });
 
   test("rejects reuse of an idempotency key with a different request", async () => {

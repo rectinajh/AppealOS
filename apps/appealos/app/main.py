@@ -535,12 +535,21 @@ class DemoService:
         if event.get("accountId") != case.accountId or event.get("appealId") != case.appealId:
             raise HTTPException(status_code=409, detail="Platform event does not match the appeal case")
         if event_type == "SUPPLEMENT_REQUESTED":
-            supplemented = self.supplement(case_id)
-            verified = self.verify(case_id)
-            result = {
-                "appealStatus": supplemented["appeal"]["status"],
-                "finalState": verified["case"]["state"],
-            }
+            if case.state == "ACCOUNT_ACTIVE":
+                result = {"appealStatus": "APPROVED", "finalState": case.state}
+            elif case.state == "DECIDED_APPROVED":
+                verified = self.verify(case_id)
+                result = {
+                    "appealStatus": "APPROVED",
+                    "finalState": verified["case"]["state"],
+                }
+            else:
+                supplemented = self.supplement(case_id)
+                verified = self.verify(case_id)
+                result = {
+                    "appealStatus": supplemented["appeal"]["status"],
+                    "finalState": verified["case"]["state"],
+                }
         else:
             expected_state = (
                 "ACCOUNT_ACTIVE" if event_type == "DECISION_APPROVED" else "DECIDED_REJECTED"

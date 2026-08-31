@@ -8,9 +8,15 @@
 
 
 
+## Live demo
+
+- Case workspace: https://appealos-606769518273.us-central1.run.app
+- Verified flow: `Reset → Parse notice → Consent → Mandate → Submit → Supplement → Verify`, ending in `ACCOUNT_ACTIVE`.
+- Live backend check: `GET /health` returns `storeBackend: firestore` and `revision: appealos-00004-9cb`; the case timeline is hash-chained and returns `verified: true`.
+
 ## Project status
 
-**Rescue slice live on Google Cloud; award-readiness upgrade implemented in this repository.** The deployed revision proves real Gemini 3.5 Flash calls through Google ADK, two Cloud Run services, Firestore persistence, typed MockDrop writes, and direct `ACCOUNT_ACTIVE` verification. The current source adds strict artifact/destination/expiry checks, case recovery by ID, an explicit Pub/Sub push route, a hash-chained timeline, and one approved execution call. Until that revision is redeployed, the hosted UI may lag the source; `/health` identifies exactly what is running. The Evidence Vault and deployed Pub/Sub/OIDC wiring remain planned.
+**Rescue slice live on Google Cloud; award-readiness upgrade deployed and verified.** The live revisions (`appealos-00004-9cb`, `mockdrop-00002-l26`) prove real Gemini 3.5 Flash calls through Google ADK, two Cloud Run services, Firestore persistence, typed MockDrop writes, strict artifact/destination/expiry checks, case recovery by ID, an explicit Pub/Sub push route, a hash-chained timeline, and one approved execution call that returns `ACCOUNT_ACTIVE`. The Evidence Vault and deployed Pub/Sub/OIDC wiring remain planned.
 
 Nothing in this repository should be read as a claim of a live DoorDash, Uber, TikTok, Amazon, GitHub, or other platform integration. The MVP uses synthetic data and a fictional delivery-platform simulation called **MockDrop**.
 
@@ -85,7 +91,7 @@ MockDrop currently provides:
 - valid-device-log and rejected-evidence paths;
 - an optional local bearer-token guard for write routes;
 - an env-gated Pub/Sub publisher for `SUPPLEMENT_REQUESTED` and decision events (`MOCKDROP_PUBSUB_ENABLED=true`);
-- seven HTTP integration tests using Node's built-in test runner.
+- eight HTTP integration tests using Node's built-in test runner.
 
 AppealOS currently provides:
 
@@ -98,12 +104,12 @@ AppealOS currently provides:
 - a post-approval `/demo/run` execution that performs submit → supplement → verify and returns `ACCOUNT_ACTIVE` without fabricating user consent;
 - strict consent/mandate checks for expiry, adapter, account, action, artifact, supplement template, and cycle count;
 - case reload by ID and a hash-chain verification endpoint for the action timeline;
-- 31 Python tests covering authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, endpoint evidence, and tamper detection.
+- 32 Python tests covering authorization, recovery, concurrent delivery, autonomous execution, Pub/Sub behavior, endpoint evidence, and tamper detection.
 
 Deployed Cloud Run URLs:
 
-- MockDrop: https://mockdrop-agrdlgr4ea-uc.a.run.app
-- AppealOS: https://appealos-agrdlgr4ea-uc.a.run.app
+- MockDrop (`mockdrop-00002-l26`): https://mockdrop-606769518273.us-central1.run.app
+- AppealOS (`appealos-00004-9cb`): https://appealos-606769518273.us-central1.run.app
 
 Deployment logs, reproducible commands, and runtime evidence: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
@@ -120,7 +126,7 @@ npm test
 npm run start:mockdrop
 ```
 
-`npm run check` runs the MockDrop workspace check, `npm test` runs the seven HTTP integration tests, and `npm run start:mockdrop` starts the local MockDrop API. See [apps/mockdrop/README.md](apps/mockdrop/README.md) for the current API contract and available routes.
+`npm run check` runs the MockDrop workspace check, `npm test` runs the eight HTTP integration tests, and `npm run start:mockdrop` starts the local MockDrop API. See [apps/mockdrop/README.md](apps/mockdrop/README.md) for the current API contract and available routes.
 
 ### AppealOS
 
@@ -131,7 +137,7 @@ cd apps/appealos
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-export MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app
+export MOCKDROP_BASE_URL=https://mockdrop-606769518273.us-central1.run.app
 # Durable storage: firestore uses GOOGLE_CLOUD_PROJECT; memory is the local default.
 export APPEALOS_STORE_BACKEND=firestore
 export GOOGLE_CLOUD_PROJECT=boxwood-scope-364905
@@ -219,7 +225,7 @@ The Devpost submission draft — bilingual text for every required field, a subm
 
 - Primary track: **The Taskmaster**.
 - `Technologies used` must name **Gemini 3.5+**, **Google ADK**, and **Cloud Run**; MockDrop is a synthetic simulation platform.
-- Deployed origin URLs: https://appealos-agrdlgr4ea-uc.a.run.app and https://mockdrop-agrdlgr4ea-uc.a.run.app. Exact model/framework versions are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+- Deployed origin URLs: https://appealos-606769518273.us-central1.run.app and https://mockdrop-606769518273.us-central1.run.app. Exact model/framework versions are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 - If this section conflicts with another README edit, `SUBMISSION.md` is authoritative for Devpost facts.
 
 Supporting deliverables: [demo script outline](docs/DEMO_SCRIPT.md) and [bonus social posts](docs/SOCIAL_POSTS.md).

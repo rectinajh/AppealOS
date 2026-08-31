@@ -196,6 +196,28 @@ class AuthorizedWorkflowTest(unittest.TestCase):
         self.assertFalse(first["duplicate"])
         self.assertTrue(replay["duplicate"])
 
+    def test_pubsub_supplement_event_is_state_idempotent_after_execution(self):
+        case = authorized_case()
+        self.store.save(case)
+        completed = self.service.execute_authorized(case.caseId)
+        event = {
+            "externalEventId": "external-supplement-late-1",
+            "type": "SUPPLEMENT_REQUESTED",
+            "caseId": case.caseId,
+            "accountId": case.accountId,
+            "appealId": completed["case"]["appealId"],
+        }
+
+        result = self.service.handle_platform_event(event)
+
+        self.assertTrue(result["accepted"])
+        self.assertEqual(result["finalState"], "ACCOUNT_ACTIVE")
+        restored = self.store.get(case.caseId)
+        self.assertEqual(
+            [item["type"] for item in restored.timeline].count("SUPPLEMENT_SUBMITTED"),
+            1,
+        )
+
     def test_concurrent_pubsub_delivery_advances_case_once(self):
         case = authorized_case()
         self.store.save(case)

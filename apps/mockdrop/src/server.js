@@ -79,7 +79,9 @@ export function createMockDropServer({
         authorizeWrite(request, apiToken);
         const body = await readJson(request);
         const result = store.submitAppeal(body, idempotencyKey(request));
-        await publisher.publish(result.outboundEvent);
+        if (!result.replayed) {
+          await publisher.publish(result.outboundEvent);
+        }
         return json(response, 202, result);
       }
 
@@ -103,7 +105,9 @@ export function createMockDropServer({
           body,
           idempotencyKey(request)
         );
-        await publisher.publish(result.outboundEvent);
+        if (!result.replayed) {
+          await publisher.publish(result.outboundEvent);
+        }
         return json(response, 200, result);
       }
 

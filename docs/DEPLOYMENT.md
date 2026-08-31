@@ -4,16 +4,23 @@ Issue: CMP-16 — MockDrop + AppealOS ADK rescue runtime deployed to Google Clou
 
 Follow-up: CMP-21 — Firestore persistence implemented and verified; Pub/Sub supplement delivery implemented behind flags, not yet deployed.
 
+Current deploy: CMP-25 — latest `6b891aa` source redeployed to Cloud Run after review and optimization.
+
 ## Live origins
 
 | Service | Cloud Run URL | Region | Project |
 |---|---|---|---|
-| MockDrop | https://mockdrop-agrdlgr4ea-uc.a.run.app | us-central1 | boxwood-scope-364905 |
-| AppealOS | https://appealos-agrdlgr4ea-uc.a.run.app | us-central1 | boxwood-scope-364905 |
+| MockDrop | https://mockdrop-606769518273.us-central1.run.app | us-central1 | boxwood-scope-364905 |
+| AppealOS | https://appealos-606769518273.us-central1.run.app | us-central1 | boxwood-scope-364905 |
 
 Project number: `606769518273`. Both services are `generation 1`, serving 100% of traffic.
 
-Latest AppealOS revision: `appealos-00003-hwk` (2026-09-01). It serves the upgraded dark glassmorphism case workspace UI at `/` on both the alias URL above and the canonical Cloud Run URL `https://appealos-606769518273.us-central1.run.app`. The UI is self-contained (inline CSS/JS/SVG) with animated flow controls, status timeline, confirm/loading/success interactions, expandable evidence cards, and outcome export; it uses no external CDN or framework.
+Latest verified revisions (2026-09-01):
+
+- AppealOS: `appealos-00004-9cb`, `https://appealos-606769518273.us-central1.run.app`
+- MockDrop: `mockdrop-00002-l26`, `https://mockdrop-606769518273.us-central1.run.app`
+
+AppealOS serves the upgraded dark glassmorphism case workspace UI at `/` with `APPEALOS_STORE_BACKEND=firestore`. The UI is self-contained (inline CSS/JS/SVG) with animated flow controls, status timeline, confirm/loading/success interactions, expandable evidence cards, and outcome export; it uses no external CDN or framework.
 
 ## Eligible model and framework
 
@@ -55,14 +62,14 @@ gcloud run deploy appealos \
   --min-instances 0 --max-instances 1 --concurrency 1 \
   --no-cpu-throttling \
   --timeout 300 \
-  --set-env-vars=MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app,GOOGLE_CLOUD_PROJECT=boxwood-scope-364905,GOOGLE_CLOUD_LOCATION=global,APPEALOS_STORE_BACKEND=firestore
+  --set-env-vars=MOCKDROP_BASE_URL=https://mockdrop-606769518273.us-central1.run.app,GOOGLE_CLOUD_PROJECT=boxwood-scope-364905,GOOGLE_CLOUD_LOCATION=global,APPEALOS_STORE_BACKEND=firestore
 ```
 
-## Verified end-to-end result for revision `appealos-00003-hwk`
+## Verified end-to-end result for revision `appealos-00004-9cb`
 
-This is historical deployment evidence. Repository source now requires an explicit `case_id`, separate consent, and mandate approval before `/demo/run`; redeploy before using the revised API against the live URL.
+The current source requires an explicit `case_id`, separate consent, and mandate approval before `/demo/run`. The full approved workflow was run against the live URL and produced `final_state: ACTIVE` with nine timeline events and hash-chain integrity `true`.
 
-`POST /demo/run` on revision `appealos-00003-hwk` returned `final_state: ACCOUNT_ACTIVE` with this timeline:
+`POST /demo/run` on revision `appealos-00004-9cb` returned `final_state: ACCOUNT_ACTIVE` with this timeline:
 
 ```text
 DEMO_RESET
@@ -91,7 +98,7 @@ Building Container..............................................................
 Setting IAM Policy..................................done
 Creating Revision..................................................done
 Routing traffic.....done
-Service [mockdrop] revision [mockdrop-00001-bf7] has been deployed and is serving 100 percent of traffic.
+Service [mockdrop] revision [mockdrop-00002-l26] has been deployed and is serving 100 percent of traffic.
 Service URL: https://mockdrop-606769518273.us-central1.run.app
 ```
 
@@ -106,7 +113,7 @@ Building Container..............................................................
 Setting IAM Policy........................done
 Creating Revision.................................................................................done
 Routing traffic.....done
-Service [appealos] revision [appealos-00001-vvd] has been deployed and is serving 100 percent of traffic.
+Service [appealos] revision [appealos-00004-9cb] has been deployed and is serving 100 percent of traffic.
 Service URL: https://appealos-606769518273.us-central1.run.app
 ```
 
@@ -123,7 +130,7 @@ The AppealOS Cloud Run logs include, per demo run:
 
 ## Firestore persistence (CMP-21)
 
-AppealOS now has a durable case store in `apps/appealos/app/store.py`. With `APPEALOS_STORE_BACKEND=firestore` the runtime persists one `cases/{caseId}` document and an ordered `cases/{caseId}/events/{eventId}` subcollection; the in-memory store remains the local default.
+AppealOS has a durable case store in `apps/appealos/app/store.py`. With `APPEALOS_STORE_BACKEND=firestore` the runtime persists one `cases/{caseId}` document and an ordered `cases/{caseId}/events/{eventId}` subcollection; the in-memory store remains the local default. This backend is deployed on revision `appealos-00004-9cb`.
 
 Firestore layout:
 
@@ -153,7 +160,7 @@ Status: code complete and covered by local unit tests; not yet deployed to Cloud
 
 ## Not implemented / planned
 
-- Deployed Firestore persistence for MockDrop (its API still uses the in-memory store; AppealOS Firestore is implemented and verified).
+- Firestore persistence for MockDrop (its API still uses the in-memory store; AppealOS Firestore is deployed and verified).
 - Deployed Pub/Sub delivery and OIDC service-to-service enforcement.
 - Encrypted Evidence Vault, Cloud Storage, Secret Manager, Cloud Scheduler reconciler.
 - Real-platform adapters; the public MVP is synthetic MockDrop data only.
@@ -166,3 +173,20 @@ On 2026-09-01 the workspace was redeployed as revision `appealos-00003-hwk`.
 
 - `GET /` returned HTTP 200 and the new `<title>AppealOS · Case Workspace</title>` page containing `flow-progress` and `confirm-mode` markers.
 - `POST /demo/run` returned `final_state=ACCOUNT_ACTIVE` with 9 timeline events.
+
+## CMP-25 latest-source redeploy verification
+
+On 2026-09-01 the repository `main` HEAD `6b891aa` was redeployed after a focused review.
+
+- MockDrop revision: `mockdrop-00002-l26` at `https://mockdrop-606769518273.us-central1.run.app`.
+- AppealOS revision: `appealos-00004-9cb` at `https://appealos-606769518273.us-central1.run.app`.
+- `GET /health` returned `{"status":"ok","revision":"appealos-00004-9cb","storeBackend":"firestore","pubsubOidcVerification":false}`.
+- `GET /` returned HTTP 200 and `<title>AppealOS · Case Workspace</title>`.
+- `POST /demo/run` returned `final_state=ACCOUNT_ACTIVE` with nine timeline events and `timelineIntegrity.verified=true`.
+
+Optimizations applied before deploy:
+
+- MockDrop no longer republishes an outbound Pub/Sub event when an idempotency key is replayed.
+- AppealOS Pub/Sub supplement handling now acknowledges `SUPPLEMENT_REQUESTED` when the case is already `ACCOUNT_ACTIVE` and can resume from `DECIDED_APPROVED`, preventing retry-time 409 loops after a dedupe-write failure.
+
+Pub/Sub topic wiring and OIDC enforcement remain planned, not deployed.

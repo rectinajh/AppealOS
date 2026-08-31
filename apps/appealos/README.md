@@ -15,7 +15,7 @@ Gemini/ADK performs three structured reasoning tasks: notice extraction, evidenc
 - A typed HTTP adapter to MockDrop and a single-page case workspace at `/`.
 - No arbitrary URL, shell, filesystem, email, recipient, or real-platform tool.
 
-The hosted revision at https://appealos-agrdlgr4ea-uc.a.run.app/ may lag repository `main`; check `/health` for the deployed revision, model, ADK version, storage backend, and Pub/Sub OIDC status.
+The current hosted revision is `appealos-00004-9cb` at https://appealos-606769518273.us-central1.run.app/. Check `/health` for the deployed revision, model, ADK version, storage backend, and Pub/Sub OIDC status.
 
 ## Run locally
 
@@ -25,7 +25,7 @@ Prerequisites: Python 3.12+ and `gcloud` authenticated to a project with Vertex 
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-export MOCKDROP_BASE_URL=https://mockdrop-agrdlgr4ea-uc.a.run.app
+export MOCKDROP_BASE_URL=https://mockdrop-606769518273.us-central1.run.app
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
@@ -70,4 +70,4 @@ Open http://localhost:8080/. The UI stores only the synthetic `caseId` in local 
 python -m unittest -v
 ```
 
-The suite covers consent and mandate boundaries, destination/artifact enforcement, autonomous execution, case recovery, Pub/Sub decoding, and hash-chain tamper detection.
+The suite (32 tests) covers consent and mandate boundaries, destination/artifact enforcement, autonomous execution, case recovery, Pub/Sub decoding, and hash-chain tamper detection.
