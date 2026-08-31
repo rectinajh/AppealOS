@@ -6,7 +6,7 @@
 
 **AppealOS is a user-owned appeal workflow runtime for an algorithmic world.** It turns a platform suspension notice, user-directed evidence, policy rules, deadlines, and scoped authorization into an executable `AppealCase`. After one bounded approval, the Agent submits the appeal, handles one authorized evidence request, tracks the response, and verifies the final account state.
 
-> 项目宣言：平台已经用算法审判我们。现在，普通人也需要一个永不疲倦的数字辩护人。
+
 
 ## Project status
 
